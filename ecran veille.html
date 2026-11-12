@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Smart TV Dashboard</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', Roboto, Helvetica, sans-serif;
+      color: #ffffff;
+      height: 100vh;
+      width: 100vw;
+      overflow: hidden;
+      background: url('https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1920&q=85') no-repeat center center/cover;
+      display: grid;
+      grid-template-columns: 1.2fr 1fr;
+      grid-template-rows: 1fr auto;
+      gap: 28px;
+      padding: 40px;
+      background-color: #0f172a;
+    }
+    .overlay {
+      position: fixed;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(15,23,42,0.70) 0%, rgba(15,23,42,0.40) 100%);
+      z-index: 0;
+    }
+    .card {
+      position: relative;
+      z-index: 1;
+      background: rgba(15, 23, 42, 0.55);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 24px;
+      padding: 32px;
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
+    }
+    /* Bloc Heure & Date */
+    .clock-panel {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+    #time {
+      font-size: 7.5rem;
+      font-weight: 700;
+      letter-spacing: -3px;
+      line-height: 1;
+    }
+    #date {
+      font-size: 2rem;
+      color: #cbd5e1;
+      margin-top: 12px;
+      text-transform: capitalize;
+    }
+    /* Bloc Météo */
+    .weather-panel {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    .weather-current {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .temp-main {
+      font-size: 5rem;
+      font-weight: 700;
+    }
+    .city-name {
+      font-size: 1.8rem;
+      color: #94a3b8;
+    }
+    .weather-desc {
+      font-size: 1.4rem;
+      color: #e2e8f0;
+      margin-top: 4px;
+    }
+    .forecast-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
+      margin-top: 24px;
+      border-top: 1px solid rgba(255,255,255,0.12);
+      padding-top: 20px;
+      text-align: center;
+    }
+    .forecast-day {
+      background: rgba(255,255,255,0.06);
+      padding: 12px;
+      border-radius: 14px;
+    }
+    .forecast-day .day-label { font-size: 1.1rem; color: #cbd5e1; font-weight: 600; }
+    .forecast-day .day-temp { font-size: 1.35rem; margin-top: 6px; font-weight: 700; }
+    /* Bloc Actualités */
+    .news-panel {
+      grid-column: 1 / -1;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .news-header {
+      font-size: 1.2rem;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      color: #38bdf8;
+      font-weight: 700;
+    }
+    .news-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+    }
+    .news-item {
+      background: rgba(255, 255, 255, 0.05);
+      padding: 16px 20px;
+      border-radius: 14px;
+      border-left: 4px solid #38bdf8;
+    }
+    .news-title {
+      font-size: 1.25rem;
+      font-weight: 600;
+      line-height: 1.35;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .news-time {
+      font-size: 0.95rem;
+      color: #94a3b8;
+      margin-top: 8px;
+    }
+  </style>
+</head>
+<body>
+  <div class="overlay"></div>
+
+  <!-- Gauche : Heure & Date -->
+  <div class="card clock-panel">
+    <div id="time">--:--</div>
+    <div id="date">Chargement...</div>
+  </div>
+
+  <!-- Droite : Météo Actuelle + Prévisions 4 jours -->
+  <div class="card weather-panel">
+    <div class="weather-current">
+      <div>
+        <div class="city-name" id="city">Strasbourg</div>
+        <div class="weather-desc" id="weather-desc">Chargement météo...</div>
+      </div>
+      <div class="temp-main" id="temp">--°C</div>
+    </div>
+    <div class="forecast-grid" id="forecast"></div>
+  </div>
+
+  <!-- Bas : Actualités RSS en direct -->
+  <div class="card news-panel">
+    <div class="news-header">À la une • Actualités en direct</div>
+    <div class="news-grid" id="news-container"></div>
+  </div>
+
+  <script>
+    // 1. CONFIGURATION (Coordonnées : Strasbourg par défaut)
+    const CONFIG = {
+      city: "Strasbourg",
+      lat: 48.5734,
+      lon: 7.7521,
+      rssUrl: "https://www.francetvinfo.fr/titres.rss"
+    };
+
+    // 2. HORLOGE TEMPS RÉEL
+    function updateClock() {
+      const now = new Date();
+      document.getElementById('time').textContent = now.toLocaleTimeString('fr-FR', {
+        hour: '2-digit', minute: '2-digit'
+      });
+      document.getElementById('date').textContent = now.toLocaleDateString('fr-FR', {
+        weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
+      });
+    }
+    setInterval(updateClock, 1000);
+    updateClock();
+
+    // 3. MÉTÉO GRATUITE SANS CLÉ API (Open-Meteo)
+    const WMO_CODES = {
+      0: "Ciel dégagé ☀️", 1: "Peu nuageux 🌤️", 2: "Partiellement nuageux ⛅",
+      3: "Couvert ☁️", 45: "Brouillard 🌫️", 51: "Bruine légère 🌦️",
+      61: "Pluie faible 🌧️", 63: "Pluie modérée 🌧️", 65: "Pluie forte 🌧️",
+      71: "Neige ❄️", 80: "Averses 🌦️", 95: "Orage ⛈️"
+    };
+
+    async function fetchWeather() {
+      try {
+        const url = `https://api.open-meteo.com/v1/forecast?latitude=${CONFIG.lat}&longitude=${CONFIG.lon}&current=temperature_2m,weather_code&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=Europe%2FParis`;
+        const res = await fetch(url);
+        const data = await res.json();
+
+        document.getElementById('city').textContent = CONFIG.city;
+        document.getElementById('temp').textContent = `${Math.round(data.current.temperature_2m)}°C`;
+        document.getElementById('weather-desc').textContent = WMO_CODES[data.current.weather_code] || "Variable";
+
+        const forecastEl = document.getElementById('forecast');
+        forecastEl.innerHTML = '';
+        for (let i = 1; i <= 4; i++) {
+          const dateObj = new Date(data.daily.time[i]);
+          const dayName = dateObj.toLocaleDateString('fr-FR', { weekday: 'short' });
+          const min = Math.round(data.daily.temperature_2m_min[i]);
+          const max = Math.round(data.daily.temperature_2m_max[i]);
+          forecastEl.innerHTML += `
+            <div class="forecast-day">
+              <div class="day-label">${dayName}</div>
+              <div class="day-temp">${min}° / ${max}°C</div>
+            </div>`;
+        }
+      } catch (e) {
+        console.error("Erreur météo:", e);
+      }
+    }
+    fetchWeather();
+    setInterval(fetchWeather, 15 * 60 * 1000); // Rafraîchit toutes les 15 min
+
+    // 4. ACTUALITÉS RSS (Franceinfo via rss2json gratuit)
+    async function fetchNews() {
+      try {
+        const apiUrl = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(CONFIG.rssUrl)}`;
+        const res = await fetch(apiUrl);
+        const data = await res.json();
+        const container = document.getElementById('news-container');
+        container.innerHTML = '';
+
+        data.items.slice(0, 3).forEach(item => {
+          const pubTime = new Date(item.pubDate).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+          container.innerHTML += `
+            <div class="news-item">
+              <div class="news-title">${item.title}</div>
+              <div class="news-time">Publié à ${pubTime}</div>
+            </div>`;
+        });
+      } catch (e) {
+        console.error("Erreur RSS:", e);
+      }
+    }
+    fetchNews();
+    setInterval(fetchNews, 10 * 60 * 1000); // Rafraîchit toutes les 10 min
+  </script>
+</body>
+</html>
