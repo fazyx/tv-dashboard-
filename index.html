@@ -3,246 +3,937 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Smart TV Dashboard</title>
+  <title>Tableau de Bord — Smart TV</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg-base: #07090e;
+      --bg-surface: rgba(15, 20, 30, 0.78);
+      --bg-elevated: rgba(24, 32, 48, 0.55);
+      --bg-subtle: rgba(255, 255, 255, 0.025);
+
+      --border-subtle: rgba(255, 255, 255, 0.07);
+      --border-highlight: rgba(255, 255, 255, 0.13);
+
+      --text-primary: #f8fafc;
+      --text-secondary: #94a3b8;
+      --text-muted: #64748b;
+
+      --accent-blue: #38bdf8;
+      --accent-blue-soft: rgba(56, 189, 248, 0.12);
+      --accent-emerald: #10b981;
+      --accent-emerald-soft: rgba(16, 185, 129, 0.14);
+      --accent-amber: #f59e0b;
+
+      --radius-lg: 2.2vh;
+      --radius-md: 1.4vh;
+      --radius-sm: 0.9vh;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
     html, body {
       width: 100vw;
       height: 100vh;
       overflow: hidden;
-      font-family: 'Segoe UI', Roboto, Helvetica, sans-serif;
-      color: #ffffff;
-      background-color: #0f172a;
+      background-color: var(--bg-base);
+      color: var(--text-primary);
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      font-variant-numeric: tabular-nums;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
       user-select: none;
-      cursor: none;
     }
+
+    /* Fond architectural sombre et sobre */
     body {
-      background: url('https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1920&q=85') no-repeat center center/cover;
+      background-image:
+        radial-gradient(circle at 12% 18%, rgba(56, 189, 248, 0.065) 0%, transparent 45%),
+        radial-gradient(circle at 88% 85%, rgba(16, 185, 129, 0.045) 0%, transparent 45%),
+        linear-gradient(180deg, #090d16 0%, #05070b 100%);
       display: grid;
-      grid-template-columns: 1.15fr 1fr;
-      grid-template-rows: minmax(0, 1.25fr) minmax(0, 1fr);
-      gap: 2.5vh 2vw;
-      padding: 3vh 3vw;
+      grid-template-columns: 41fr 59fr;
+      grid-template-rows: 1fr;
+      gap: 2.4vw;
+      padding: 3.2vh 2.8vw;
+      position: relative;
     }
-    .overlay {
+
+    /* Grille subtile de fond */
+    body::before {
+      content: "";
       position: fixed;
       inset: 0;
-      background: linear-gradient(135deg, rgba(15,23,42,0.75) 0%, rgba(15,23,42,0.45) 100%);
+      background-image:
+        linear-gradient(to right, rgba(255, 255, 255, 0.015) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255, 255, 255, 0.015) 1px, transparent 1px);
+      background-size: 4vw 4vw;
+      pointer-events: none;
       z-index: 0;
     }
-    .card {
+
+    /* Colonnes principales */
+    .left-column {
       position: relative;
       z-index: 1;
-      min-height: 0;
-      background: rgba(15, 23, 42, 0.60);
-      backdrop-filter: blur(14px);
-      -webkit-backdrop-filter: blur(14px);
-      border: 1px solid rgba(255, 255, 255, 0.15);
-      border-radius: 2.2vh;
-      padding: 3vh 2.5vw;
-      box-shadow: 0 1vh 3vh rgba(0, 0, 0, 0.35);
-    }
-    /* Bloc Heure & Date */
-    .clock-panel {
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-    }
-    #time {
-      font-size: 13vh;
-      font-weight: 700;
-      letter-spacing: -0.3vw;
-      line-height: 1;
-    }
-    #date {
-      font-size: 3.4vh;
-      color: #cbd5e1;
-      margin-top: 1.8vh;
-      text-transform: capitalize;
-    }
-    /* Bloc Météo */
-    .weather-panel {
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-    }
-    .weather-current {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-    .temp-main {
-      font-size: 8.5vh;
-      font-weight: 700;
-      line-height: 1;
-    }
-    .city-name {
-      font-size: 3.2vh;
-      color: #94a3b8;
-      font-weight: 600;
-    }
-    .weather-desc {
-      font-size: 2.5vh;
-      color: #e2e8f0;
-      margin-top: 0.6vh;
-    }
-    .forecast-grid {
       display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 1vw;
-      border-top: 1px solid rgba(255,255,255,0.12);
-      padding-top: 2vh;
-      text-align: center;
+      grid-template-rows: 44fr 56fr;
+      gap: 2.6vh;
+      min-height: 0;
+      height: 100%;
     }
-    .forecast-day {
-      background: rgba(255,255,255,0.06);
-      padding: 1.4vh 0.6vw;
-      border-radius: 1.4vh;
-    }
-    .forecast-day .day-label {
-      font-size: 2.1vh;
-      color: #cbd5e1;
-      font-weight: 600;
-      text-transform: capitalize;
-    }
-    .forecast-day .day-temp {
-      font-size: 2.3vh;
-      margin-top: 0.6vh;
-      font-weight: 700;
-    }
-    /* Bloc Emploi du temps du jour */
-    .schedule-panel {
-      grid-column: 1 / -1;
+
+    .right-column {
+      position: relative;
+      z-index: 1;
+      height: 100%;
+      min-height: 0;
       display: flex;
       flex-direction: column;
-      justify-content: space-between;
-      gap: 1.8vh;
     }
-    .schedule-header {
+
+    /* Style générique des panneaux */
+    .panel {
+      background: var(--bg-surface);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border: 1px solid var(--border-subtle);
+      border-top-color: var(--border-highlight);
+      border-radius: var(--radius-lg);
+      padding: 3.2vh 2.4vw;
+      box-shadow: 0 2vh 5vh rgba(0, 0, 0, 0.55);
       display: flex;
-      justify-content: space-between;
+      flex-direction: column;
+      min-height: 0;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* En-tête de section standardisé */
+    .panel-header {
+      display: flex;
       align-items: center;
-      font-size: 2.2vh;
-      text-transform: uppercase;
-      letter-spacing: 0.15vw;
-      color: #38bdf8;
-      font-weight: 700;
+      justify-content: space-between;
+      margin-bottom: 2vh;
       flex-shrink: 0;
     }
-    .schedule-count {
-      font-size: 1.9vh;
-      color: #94a3b8;
-      text-transform: none;
-      letter-spacing: 0;
+
+    .panel-label {
+      display: flex;
+      align-items: center;
+      gap: 0.7vw;
+      font-size: 1.55vh;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+      color: var(--text-secondary);
+    }
+
+    .panel-label svg {
+      width: 1.9vh;
+      height: 1.9vh;
+      color: var(--accent-blue);
+      flex-shrink: 0;
+    }
+
+    /* ==========================================================================
+       1. PANNEAU HORLOGE & DATE (HAUT GAUCHE)
+       ========================================================================== */
+    .clock-panel {
+      justify-content: space-between;
+    }
+
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5vw;
+      padding: 0.55vh 0.85vw;
+      background: rgba(255, 255, 255, 0.035);
+      border: 1px solid var(--border-subtle);
+      border-radius: 999px;
+      font-size: 1.35vh;
+      color: var(--text-secondary);
+      font-weight: 500;
+      letter-spacing: 0.03em;
+    }
+
+    .status-dot {
+      width: 0.8vh;
+      height: 0.8vh;
+      border-radius: 50%;
+      background-color: var(--accent-emerald);
+      box-shadow: 0 0 1vh var(--accent-emerald);
+    }
+
+    .clock-main {
+      display: flex;
+      align-items: baseline;
+      gap: 0.8vw;
+      margin: auto 0;
+    }
+
+    .time-hm {
+      font-family: 'Inter', sans-serif;
+      font-size: 12.2vh;
+      font-weight: 700;
+      letter-spacing: -0.045em;
+      line-height: 0.92;
+      color: var(--text-primary);
+    }
+
+    .time-sec {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 3.4vh;
+      font-weight: 500;
+      color: var(--text-muted);
+      letter-spacing: -0.02em;
+    }
+
+    .date-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-top: 2vh;
+      border-top: 1px solid var(--border-subtle);
+    }
+
+    .date-full {
+      font-size: 2.55vh;
+      font-weight: 500;
+      color: var(--text-primary);
+      text-transform: capitalize;
+      letter-spacing: -0.01em;
+    }
+
+    .week-badge {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 1.5vh;
+      color: var(--text-muted);
+      background: rgba(255, 255, 255, 0.03);
+      padding: 0.5vh 0.75vw;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border-subtle);
+    }
+
+    /* ==========================================================================
+       2. PANNEAU MÉTÉO DU JOUR (BAS GAUCHE — AUJOURD'HUI UNIQUEMENT)
+       ========================================================================== */
+    .weather-panel {
+      justify-content: space-between;
+    }
+
+    .location-tag {
+      font-size: 1.55vh;
+      font-weight: 500;
+      color: var(--text-secondary);
+      display: flex;
+      align-items: center;
+      gap: 0.4vw;
+    }
+
+    .location-tag svg {
+      width: 1.7vh;
+      height: 1.7vh;
+      color: var(--text-muted);
+    }
+
+    .weather-hero {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin: 1vh 0;
+    }
+
+    .weather-temp-group {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .temp-current {
+      font-size: 8.8vh;
+      font-weight: 700;
+      letter-spacing: -0.04em;
+      line-height: 1;
+      color: var(--text-primary);
+    }
+
+    .weather-condition {
+      font-size: 2.3vh;
+      font-weight: 500;
+      color: var(--text-secondary);
+      margin-top: 0.9vh;
+    }
+
+    .weather-icon-box {
+      width: 10.5vh;
+      height: 10.5vh;
+      border-radius: 2vh;
+      background: linear-gradient(135deg, rgba(56, 189, 248, 0.1) 0%, rgba(255, 255, 255, 0.02) 100%);
+      border: 1px solid var(--border-subtle);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .weather-icon-box svg {
+      width: 6.2vh;
+      height: 6.2vh;
+      color: var(--accent-blue);
+    }
+
+    /* Bloc Amplitude Thermique du Jour (Min / Max) */
+    .minmax-card {
+      background: var(--bg-elevated);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 2vh 1.5vw;
+      display: flex;
+      flex-direction: column;
+      gap: 1.4vh;
+    }
+
+    .minmax-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .minmax-endpoint {
+      display: flex;
+      align-items: baseline;
+      gap: 0.55vw;
+    }
+
+    .minmax-label {
+      font-size: 1.45vh;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--text-muted);
+    }
+
+    .minmax-val {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 2.6vh;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .minmax-val.min-color {
+      color: #7dd3fc;
+    }
+
+    .minmax-val.max-color {
+      color: #fca5a5;
+    }
+
+    .minmax-title-center {
+      font-size: 1.35vh;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
       font-weight: 500;
     }
-    .schedule-grid {
+
+    .temp-range-track {
+      width: 100%;
+      height: 0.9vh;
+      background: rgba(255, 255, 255, 0.07);
+      border-radius: 999px;
+      position: relative;
+      overflow: visible;
+    }
+
+    .temp-range-fill {
+      position: absolute;
+      inset: 0;
+      border-radius: 999px;
+      background: linear-gradient(90deg, #38bdf8 0%, #34d399 50%, #fb923c 100%);
+      opacity: 0.85;
+    }
+
+    .temp-range-marker {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 1.8vh;
+      height: 1.8vh;
+      border-radius: 50%;
+      background: var(--text-primary);
+      border: 0.35vh solid #090d16;
+      box-shadow: 0 0 1.2vh rgba(255, 255, 255, 0.8);
+      transition: left 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    /* Métriques secondaires du jour */
+    .weather-metrics {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(18vw, 1fr));
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1vw;
+      padding-top: 0.4vh;
+    }
+
+    .metric-item {
+      background: var(--bg-subtle);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      padding: 1.2vh 0.9vw;
+      display: flex;
+      flex-direction: column;
+      gap: 0.3vh;
+    }
+
+    .metric-label {
+      font-size: 1.3vh;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-weight: 500;
+    }
+
+    .metric-value {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 1.95vh;
+      font-weight: 600;
+      color: var(--text-secondary);
+    }
+
+    /* ==========================================================================
+       3. PANNEAU EMPLOI DU TEMPS DU JOUR (COLONNE DROITE PLEINE HAUTEUR)
+       ========================================================================== */
+    .schedule-panel {
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .schedule-top-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-bottom: 2.2vh;
+      margin-bottom: 2.2vh;
+      border-bottom: 1px solid var(--border-subtle);
+      flex-shrink: 0;
+    }
+
+    .schedule-title-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5vh;
+    }
+
+    .schedule-main-title {
+      font-size: 2.5vh;
+      font-weight: 600;
+      color: var(--text-primary);
+      letter-spacing: -0.02em;
+      display: flex;
+      align-items: center;
+      gap: 0.8vw;
+    }
+
+    .schedule-subtitle {
+      font-size: 1.55vh;
+      color: var(--text-muted);
+      font-weight: 400;
+    }
+
+    .schedule-meta-badges {
+      display: flex;
+      align-items: center;
+      gap: 0.8vw;
+    }
+
+    .meta-badge {
+      padding: 0.7vh 1vw;
+      border-radius: var(--radius-sm);
+      font-size: 1.5vh;
+      font-weight: 500;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-secondary);
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .meta-badge.highlight {
+      background: var(--accent-blue-soft);
+      border-color: rgba(56, 189, 248, 0.28);
+      color: var(--accent-blue);
+    }
+
+    /* Liste verticale adaptative des cours */
+    .schedule-list {
+      flex: 1;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5vh;
+      justify-content: flex-start;
+    }
+
+    /* Adaptation automatique selon le nombre de cours dans la journée */
+    .schedule-list[data-density="spacious"] {
+      gap: 2vh;
+    }
+    .schedule-list[data-density="normal"] {
+      gap: 1.4vh;
+    }
+    .schedule-list[data-density="compact"] {
+      gap: 1vh;
+    }
+    .schedule-list[data-density="ultra"] {
+      gap: 0.75vh;
+    }
+
+    /* Carte de cours individuelle */
+    .course-card {
+      position: relative;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border-subtle);
+      border-left: 0.35vw solid var(--accent-blue);
+      border-radius: var(--radius-md);
+      padding: 2vh 1.6vw;
+      display: grid;
+      grid-template-columns: 9.5vw 1fr auto;
+      align-items: center;
       gap: 1.5vw;
       flex: 1;
       min-height: 0;
+      max-height: 16vh;
+      overflow: hidden;
+      transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease;
     }
-    .event-card {
-      background: rgba(255, 255, 255, 0.06);
-      padding: 2vh 1.5vw;
-      border-radius: 1.6vh;
-      border-left: 0.4vw solid #38bdf8;
+
+    /* Densité compacte (5-6 cours) */
+    .schedule-list[data-density="compact"] .course-card {
+      padding: 1.3vh 1.4vw;
+      max-height: 11.5vh;
+    }
+
+    /* Densité ultra-compacte (7+ cours) */
+    .schedule-list[data-density="ultra"] .course-card {
+      padding: 0.9vh 1.2vw;
+      max-height: 9vh;
+      border-radius: var(--radius-sm);
+    }
+
+    /* États du cours : Passé, En cours, Prochain, À venir */
+    .course-card.past {
+      opacity: 0.42;
+      background: rgba(15, 20, 30, 0.35);
+      border-left-color: #475569;
+    }
+
+    .course-card.ongoing {
+      background: linear-gradient(90deg, rgba(16, 185, 129, 0.13) 0%, rgba(24, 32, 48, 0.7) 100%);
+      border-color: rgba(16, 185, 129, 0.35);
+      border-left: 0.4vw solid var(--accent-emerald);
+      box-shadow: 0 0.8vh 2.5vh rgba(0, 0, 0, 0.35);
+    }
+
+    .course-card.next-up {
+      background: linear-gradient(90deg, rgba(56, 189, 248, 0.11) 0%, rgba(24, 32, 48, 0.65) 100%);
+      border-color: rgba(56, 189, 248, 0.28);
+      border-left: 0.4vw solid var(--accent-blue);
+    }
+
+    /* Colonne Horaire dans la carte */
+    .course-time-col {
       display: flex;
       flex-direction: column;
-      justify-content: space-between;
-      min-height: 0;
+      justify-content: center;
+      gap: 0.4vh;
+      padding-right: 1.2vw;
+      border-right: 1px solid var(--border-subtle);
     }
-    .event-card.ongoing {
-      background: rgba(56, 189, 248, 0.16);
-      border-left-color: #22c55e;
+
+    .course-time-range {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 2.05vh;
+      font-weight: 600;
+      color: var(--text-primary);
+      letter-spacing: -0.02em;
+      white-space: nowrap;
     }
-    .event-card.past {
-      opacity: 0.5;
-      border-left-color: #64748b;
+
+    .schedule-list[data-density="compact"] .course-time-range {
+      font-size: 1.85vh;
     }
-    .event-time {
-      font-size: 2.1vh;
-      font-weight: 700;
-      color: #38bdf8;
+    .schedule-list[data-density="ultra"] .course-time-range {
+      font-size: 1.65vh;
+    }
+
+    .course-duration {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 1.35vh;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    .schedule-list[data-density="ultra"] .course-duration {
+      font-size: 1.2vh;
+    }
+
+    /* Colonne Contenu principal du cours */
+    .course-info-col {
       display: flex;
-      align-items: center;
-      justify-content: space-between;
+      flex-direction: column;
+      justify-content: center;
+      gap: 0.65vh;
+      min-width: 0;
     }
-    .event-card.ongoing .event-time {
-      color: #4ade80;
+
+    .schedule-list[data-density="ultra"] .course-info-col {
+      gap: 0.25vh;
     }
-    .badge-live {
-      font-size: 1.5vh;
-      background: #22c55e;
-      color: #0f172a;
-      padding: 0.3vh 0.6vw;
-      border-radius: 0.8vh;
-      font-weight: 700;
-      text-transform: uppercase;
-    }
-    .event-title {
-      font-size: 2.4vh;
-      font-weight: 700;
-      line-height: 1.3;
-      margin: 1vh 0;
-      display: -webkit-box;
-      -webkit-line-clamp: 2;
-      -webkit-box-orient: vertical;
-      overflow: hidden;
-    }
-    .event-location {
-      font-size: 1.9vh;
-      color: #cbd5e1;
+
+    .course-title {
+      font-size: 2.2vh;
+      font-weight: 600;
+      color: var(--text-primary);
+      line-height: 1.25;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
     }
-    .empty-schedule {
-      grid-column: 1 / -1;
+
+    .schedule-list[data-density="compact"] .course-title {
+      font-size: 1.95vh;
+    }
+    .schedule-list[data-density="ultra"] .course-title {
+      font-size: 1.72vh;
+    }
+
+    .course-location {
+      display: flex;
+      align-items: center;
+      gap: 0.45vw;
+      font-size: 1.6vh;
+      color: var(--text-secondary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .schedule-list[data-density="compact"] .course-location {
+      font-size: 1.45vh;
+    }
+    .schedule-list[data-density="ultra"] .course-location {
+      font-size: 1.32vh;
+    }
+
+    .course-location svg {
+      width: 1.65vh;
+      height: 1.65vh;
+      color: var(--text-muted);
+      flex-shrink: 0;
+    }
+
+    /* Colonne Badge d'état à droite */
+    .course-status-col {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      justify-content: center;
+      gap: 0.5vh;
+      flex-shrink: 0;
+    }
+
+    .course-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4vw;
+      padding: 0.55vh 0.8vw;
+      border-radius: 999px;
+      font-size: 1.3vh;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      white-space: nowrap;
+    }
+
+    .schedule-list[data-density="ultra"] .course-badge {
+      padding: 0.35vh 0.65vw;
+      font-size: 1.15vh;
+    }
+
+    .course-badge.badge-ongoing {
+      background: var(--accent-emerald-soft);
+      color: #34d399;
+      border: 1px solid rgba(16, 185, 129, 0.4);
+    }
+
+    .course-badge.badge-next {
+      background: var(--accent-blue-soft);
+      color: var(--accent-blue);
+      border: 1px solid rgba(56, 189, 248, 0.35);
+    }
+
+    .course-badge.badge-past {
+      background: rgba(255, 255, 255, 0.04);
+      color: var(--text-muted);
+    }
+
+    .course-remaining {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 1.3vh;
+      color: var(--text-secondary);
+    }
+
+    /* Barre de progression temps réel pour le cours en cours */
+    .course-progress-track {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 0.4vh;
+      background: rgba(255, 255, 255, 0.06);
+    }
+
+    .course-progress-fill {
+      height: 100%;
+      background: var(--accent-emerald);
+      box-shadow: 0 0 1vh var(--accent-emerald);
+      transition: width 0.5s ease;
+    }
+
+    /* État Vide (Aucun cours prévu aujourd'hui) */
+    .empty-state-box {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      background: radial-gradient(circle at center, rgba(56, 189, 248, 0.04) 0%, rgba(255, 255, 255, 0.01) 70%);
+      border: 1px dashed rgba(255, 255, 255, 0.1);
+      border-radius: var(--radius-md);
+      padding: 4vh 3vw;
+      gap: 2vh;
+    }
+
+    .empty-icon-circle {
+      width: 9vh;
+      height: 9vh;
+      border-radius: 50%;
+      background: rgba(56, 189, 248, 0.08);
+      border: 1px solid rgba(56, 189, 248, 0.2);
       display: flex;
       align-items: center;
       justify-content: center;
-      background: rgba(255, 255, 255, 0.04);
-      border-radius: 1.6vh;
-      font-size: 2.5vh;
-      color: #cbd5e1;
-      height: 100%;
+      color: var(--accent-blue);
+    }
+
+    .empty-icon-circle svg {
+      width: 4.2vh;
+      height: 4.2vh;
+    }
+
+    .empty-title {
+      font-size: 2.6vh;
+      font-weight: 600;
+      color: var(--text-primary);
+      letter-spacing: -0.01em;
+    }
+
+    .empty-desc {
+      font-size: 1.75vh;
+      color: var(--text-secondary);
+      max-width: 32vw;
+      line-height: 1.5;
+    }
+
+    /* Pied de colonne Emploi du temps */
+    .schedule-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-top: 1.8vh;
+      margin-top: 1.8vh;
+      border-top: 1px solid var(--border-subtle);
+      font-size: 1.35vh;
+      color: var(--text-muted);
+      flex-shrink: 0;
+    }
+
+    .mode-switcher-btn {
+      background: transparent;
+      border: 1px solid transparent;
+      color: var(--text-muted);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 1.25vh;
+      padding: 0.3vh 0.6vw;
+      border-radius: 0.5vh;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .mode-switcher-btn:hover {
+      border-color: var(--border-subtle);
+      color: var(--text-secondary);
+      background: rgba(255, 255, 255, 0.03);
     }
   </style>
 </head>
 <body>
-  <div class="overlay"></div>
 
-  <!-- Gauche : Heure & Date -->
-  <div class="card clock-panel">
-    <div id="time">--:--</div>
-    <div id="date">Chargement...</div>
-  </div>
+  <!-- COLONNE GAUCHE : HORLOGE & MÉTÉO DU JOUR -->
+  <div class="left-column">
 
-  <!-- Droite : Météo Actuelle + Prévisions 4 jours -->
-  <div class="card weather-panel">
-    <div class="weather-current">
-      <div>
-        <div class="city-name" id="city">Strasbourg</div>
-        <div class="weather-desc" id="weather-desc">Chargement météo...</div>
+    <!-- 1. HORLOGE & DATE D'AUJOURD'HUI -->
+    <section class="panel clock-panel">
+      <div class="panel-header">
+        <div class="panel-label">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <polyline points="12 6 12 12 16 14"></polyline>
+          </svg>
+          <span>Heure locale</span>
+        </div>
+        <div class="status-pill">
+          <span class="status-dot" id="sync-dot"></span>
+          <span id="sync-label">En direct</span>
+        </div>
       </div>
-      <div class="temp-main" id="temp">--°C</div>
-    </div>
-    <div class="forecast-grid" id="forecast"></div>
+
+      <div class="clock-main">
+        <div class="time-hm" id="time-hm">--:--</div>
+        <div class="time-sec" id="time-sec">--</div>
+      </div>
+
+      <div class="date-footer">
+        <div class="date-full" id="date-full">Chargement de la date...</div>
+        <div class="week-badge" id="week-number">Semaine --</div>
+      </div>
+    </section>
+
+    <!-- 2. MÉTÉO DU JOUR (AUJOURD'HUI UNIQUEMENT + MIN/MAX) -->
+    <section class="panel weather-panel">
+      <div class="panel-header">
+        <div class="panel-label">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"></path>
+          </svg>
+          <span>Météo du jour</span>
+        </div>
+        <div class="location-tag">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"></path>
+            <circle cx="12" cy="10" r="3"></circle>
+          </svg>
+          <span id="weather-city">Strasbourg</span>
+        </div>
+      </div>
+
+      <div class="weather-hero">
+        <div class="weather-temp-group">
+          <div class="temp-current" id="temp-current">--°C</div>
+          <div class="weather-condition" id="weather-desc">Synchronisation météo...</div>
+        </div>
+        <div class="weather-icon-box" id="weather-icon-container">
+          <!-- Icône SVG injectée dynamiquement -->
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="4"></circle>
+            <path d="M12 2v2"></path><path d="M12 20v2"></path>
+            <path d="m4.93 4.93 1.41 1.41"></path><path d="m17.66 17.66 1.41 1.41"></path>
+            <path d="M2 12h2"></path><path d="M20 12h2"></path>
+            <path d="m6.34 17.66-1.41 1.41"></path><path d="m19.07 4.93-1.41 1.41"></path>
+          </svg>
+        </div>
+      </div>
+
+      <!-- Amplitude thermique du jour : Température Minimale & Maximale -->
+      <div class="minmax-card">
+        <div class="minmax-header">
+          <div class="minmax-endpoint">
+            <span class="minmax-label">Min</span>
+            <span class="minmax-val min-color" id="temp-min">--°C</span>
+          </div>
+          <span class="minmax-title-center">Amplitude du jour</span>
+          <div class="minmax-endpoint">
+            <span class="minmax-label">Max</span>
+            <span class="minmax-val max-color" id="temp-max">--°C</span>
+          </div>
+        </div>
+        <div class="temp-range-track">
+          <div class="temp-range-fill"></div>
+          <div class="temp-range-marker" id="temp-marker" style="left: 50%;" title="Température actuelle"></div>
+        </div>
+      </div>
+
+      <!-- Indicateurs complémentaires pour aujourd'hui -->
+      <div class="weather-metrics">
+        <div class="metric-item">
+          <span class="metric-label">Ressenti</span>
+          <span class="metric-value" id="weather-feels">--°C</span>
+        </div>
+        <div class="metric-item">
+          <span class="metric-label">Vent</span>
+          <span class="metric-value" id="weather-wind">-- km/h</span>
+        </div>
+        <div class="metric-item">
+          <span class="metric-label">Précipitations</span>
+          <span class="metric-value" id="weather-rain">-- %</span>
+        </div>
+      </div>
+    </section>
+
   </div>
 
-  <!-- Bas : Emploi du temps du jour -->
-  <div class="card schedule-panel">
-    <div class="schedule-header">
-      <span>Emploi du temps du jour</span>
-      <span class="schedule-count" id="schedule-summary">Chargement...</span>
-    </div>
-    <div class="schedule-grid" id="schedule-container"></div>
+  <!-- COLONNE DROITE PLEINE HAUTEUR : EMPLOI DU TEMPS DU JOUR -->
+  <div class="right-column">
+    <section class="panel schedule-panel">
+
+      <div class="schedule-top-bar">
+        <div class="schedule-title-group">
+          <div class="panel-label" style="margin-bottom: 0.4vh;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect width="18" height="18" x="3" y="4" rx="2" ry="2"></rect>
+              <line x1="16" x2="16" y1="2" y2="6"></line>
+              <line x1="8" x2="8" y1="2" y2="6"></line>
+              <line x1="3" x2="21" y1="10" y2="10"></line>
+            </svg>
+            <span>Planning académique</span>
+          </div>
+          <h1 class="schedule-main-title">Emploi du temps d'aujourd'hui</h1>
+        </div>
+
+        <div class="schedule-meta-badges">
+          <span class="meta-badge" id="schedule-volume">--h--</span>
+          <span class="meta-badge highlight" id="schedule-count">Chargement...</span>
+        </div>
+      </div>
+
+      <!-- Conteneur dynamique des cours du jour -->
+      <div class="schedule-list" id="schedule-container" data-density="normal">
+        <!-- Injecté par JavaScript -->
+      </div>
+
+      <!-- Pied de panneau discret -->
+      <div class="schedule-footer">
+        <span id="last-updated-text">Synchronisation Unistra ICS...</span>
+        <button class="mode-switcher-btn" id="demo-toggle-btn" title="Touche 'D' pour tester différents affichages">
+          Source : Calendrier Live (Touche D : Tester vues)
+        </button>
+      </div>
+
+    </section>
   </div>
 
   <script>
-   // 1. CONFIGURATION
+    /* ==========================================================================
+       1. CONFIGURATION GÉNÉRALE
+       ========================================================================== */
     const CONFIG = {
       city: "Strasbourg",
       lat: 48.5734,
@@ -250,74 +941,160 @@
       icsUrl: "https://monemploidutemps.unistra.fr/api/calendar/1fd1f31b-e0f0-4588-a8dd-0985914d395a/export"
     };
 
-    // 2. HORLOGE TEMPS RÉEL
+    // État global pour stocker les événements du jour et permettre la mise à jour temps réel des barres de progression
+    let cachedTodaysEvents = [];
+    // Modes d'affichage : 0 = Live ICS, 1 = Démo Journée Chargée (7 cours), 2 = Démo Journée Standard (4 cours), 3 = Démo Journée Libre (0 cours)
+    let viewMode = 0;
+
+    /* ==========================================================================
+       2. HORLOGE & DATE DU JOUR
+       ========================================================================== */
+    function getISOWeekNumber(d) {
+      const date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+      const dayNum = date.getUTCDay() || 7;
+      date.setUTCDate(date.getUTCDate() + 4 - dayNum);
+      const yearStart = new Date(Date.UTC(date.getUTCFullYear(), 0, 1));
+      return Math.ceil((((date - yearStart) / 86400000) + 1) / 7);
+    }
+
     function updateClock() {
       const now = new Date();
-      document.getElementById('time').textContent = now.toLocaleTimeString('fr-FR', {
-        hour: '2-digit', minute: '2-digit'
+
+      const hours = String(now.getHours()).padStart(2, '0');
+      const minutes = String(now.getMinutes()).padStart(2, '0');
+      const seconds = String(now.getSeconds()).padStart(2, '0');
+
+      document.getElementById('time-hm').textContent = `${hours}:${minutes}`;
+      document.getElementById('time-sec').textContent = `:${seconds}`;
+
+      // Uniquement la date d'aujourd'hui
+      const dateStr = now.toLocaleDateString('fr-FR', {
+        weekday: 'long',
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric'
       });
-      document.getElementById('date').textContent = now.toLocaleDateString('fr-FR', {
-        weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
-      });
+      document.getElementById('date-full').textContent = dateStr;
+      document.getElementById('week-number').textContent = `Semaine ${getISOWeekNumber(now)}`;
     }
+
     setInterval(updateClock, 1000);
     updateClock();
 
-    // 3. MÉTÉO (Open-Meteo)
-    const WMO_CODES = {
-      0: "Ciel dégagé ☀️", 1: "Peu nuageux 🌤️", 2: "Partiellement nuageux ⛅",
-      3: "Couvert ☁️", 45: "Brouillard 🌫️", 51: "Bruine légère 🌦️",
-      61: "Pluie faible 🌧️", 63: "Pluie modérée 🌧️", 65: "Pluie forte 🌧️",
-      71: "Neige ❄️", 80: "Averses 🌦️", 95: "Orage ⛈️"
+    /* ==========================================================================
+       3. MÉTÉO DU JOUR UNIQUEMENT (AVEC MIN / MAX & ICÔNES VECTORIELLES SVG)
+       ========================================================================== */
+    const WEATHER_INFO = {
+      0: { label: "Ciel dégagé", icon: "sun" },
+      1: { label: "Principalement dégagé", icon: "sun-cloud" },
+      2: { label: "Partiellement nuageux", icon: "sun-cloud" },
+      3: { label: "Ciel couvert", icon: "cloud" },
+      45: { label: "Brouillard", icon: "fog" },
+      48: { label: "Brouillard givrant", icon: "fog" },
+      51: { label: "Bruine légère", icon: "drizzle" },
+      53: { label: "Bruine modérée", icon: "drizzle" },
+      55: { label: "Bruine dense", icon: "drizzle" },
+      61: { label: "Pluie faible", icon: "rain" },
+      63: { label: "Pluie modérée", icon: "rain" },
+      65: { label: "Pluie forte", icon: "rain" },
+      71: { label: "Chute de neige faible", icon: "snow" },
+      73: { label: "Chute de neige modérée", icon: "snow" },
+      75: { label: "Chute de neige forte", icon: "snow" },
+      80: { label: "Averses de pluie", icon: "rain" },
+      81: { label: "Averses modérées", icon: "rain" },
+      82: { label: "Averses fortes", icon: "rain" },
+      95: { label: "Orage", icon: "storm" },
+      96: { label: "Orage avec grêle", icon: "storm" },
+      99: { label: "Orage violent", icon: "storm" }
     };
+
+    function getWeatherSvg(type) {
+      switch (type) {
+        case "sun":
+          return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>`;
+        case "sun-cloud":
+          return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="M20 12h2"/><path d="m19.07 4.93-1.41 1.41"/><path d="M15.947 12.65a4 4 0 0 0-5.925-4.128"/><path d="M13 22H7a5 5 0 1 1 4.9-6H13a3 3 0 0 1 0 6Z"/></svg>`;
+        case "fog":
+          return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"/><path d="M16 17H7"/><path d="M17 21H9"/></svg>`;
+        case "drizzle":
+        case "rain":
+          return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"/><path d="M16 14v6"/><path d="M8 14v6"/><path d="M12 16v6"/></svg>`;
+        case "snow":
+          return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"/><path d="M8 15h.01"/><path d="M8 19h.01"/><path d="M12 17h.01"/><path d="M12 21h.01"/><path d="M16 15h.01"/><path d="M16 19h.01"/></svg>`;
+        case "storm":
+          return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M6 16.326A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 .5 8.973"/><path d="m13 12-3 5h4l-3 5"/></svg>`;
+        default:
+          return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/></svg>`;
+      }
+    }
 
     async function fetchWeather() {
       try {
-        const url = `https://api.open-meteo.com/v1/forecast?latitude=${CONFIG.lat}&longitude=${CONFIG.lon}&current=temperature_2m,weather_code&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=Europe%2FParis`;
+        const url = `https://api.open-meteo.com/v1/forecast?latitude=${CONFIG.lat}&longitude=${CONFIG.lon}&current=temperature_2m,apparent_temperature,weather_code,wind_speed_10m&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max&timezone=Europe%2FParis&forecast_days=1`;
         const res = await fetch(url);
+        if (!res.ok) throw new Error("Erreur HTTP météo");
         const data = await res.json();
 
-        document.getElementById('city').textContent = CONFIG.city;
-        document.getElementById('temp').textContent = `${Math.round(data.current.temperature_2m)}°C`;
-        document.getElementById('weather-desc').textContent = WMO_CODES[data.current.weather_code] || "Variable";
+        const currentTemp = Math.round(data.current.temperature_2m);
+        const feelsLike = Math.round(data.current.apparent_temperature);
+        const windSpeed = Math.round(data.current.wind_speed_10m);
+        const weatherCode = data.current.weather_code;
 
-        const forecastEl = document.getElementById('forecast');
-        forecastEl.innerHTML = '';
-        for (let i = 1; i <= 4; i++) {
-          const dateObj = new Date(data.daily.time[i]);
-          const dayName = dateObj.toLocaleDateString('fr-FR', { weekday: 'short' });
-          const min = Math.round(data.daily.temperature_2m_min[i]);
-          const max = Math.round(data.daily.temperature_2m_max[i]);
-          forecastEl.innerHTML += `
-            <div class="forecast-day">
-              <div class="day-label">${dayName}</div>
-              <div class="day-temp">${min}° / ${max}°C</div>
-            </div>`;
+        // Températures minimale et maximale du jour (index 0 = aujourd'hui)
+        const minTemp = Math.round(data.daily.temperature_2m_min[0]);
+        const maxTemp = Math.round(data.daily.temperature_2m_max[0]);
+        const precipProb = data.daily.precipitation_probability_max?.[0] ?? 0;
+
+        const info = WEATHER_INFO[weatherCode] || { label: "Conditions variables", icon: "cloud" };
+
+        document.getElementById('weather-city').textContent = CONFIG.city;
+        document.getElementById('temp-current').textContent = `${currentTemp}°C`;
+        document.getElementById('weather-desc').textContent = info.label;
+        document.getElementById('weather-icon-container').innerHTML = getWeatherSvg(info.icon);
+
+        document.getElementById('temp-min').textContent = `${minTemp}°C`;
+        document.getElementById('temp-max').textContent = `${maxTemp}°C`;
+
+        // Calcul de la position du curseur entre Min et Max du jour
+        let ratio = 50;
+        if (maxTemp > minTemp) {
+          ratio = ((data.current.temperature_2m - data.daily.temperature_2m_min[0]) /
+                   (data.daily.temperature_2m_max[0] - data.daily.temperature_2m_min[0])) * 100;
+          ratio = Math.max(4, Math.min(96, ratio));
         }
-      } catch (e) {
-        console.error("Erreur météo:", e);
+        document.getElementById('temp-marker').style.left = `${ratio}%`;
+
+        document.getElementById('weather-feels').textContent = `${feelsLike}°C`;
+        document.getElementById('weather-wind').textContent = `${windSpeed} km/h`;
+        document.getElementById('weather-rain').textContent = `${precipProb} %`;
+      } catch (err) {
+        console.error("Erreur lors de la récupération de la météo :", err);
       }
     }
+
     fetchWeather();
     setInterval(fetchWeather, 15 * 60 * 1000);
 
-    // 4. EMPLOI DU TEMPS DU JOUR (Lecteur .ICS intégré)
+    /* ==========================================================================
+       4. EMPLOI DU TEMPS DU JOUR (LECTEUR ICS + ADAPTATION MULTI-COURS)
+       ========================================================================== */
     function parseIcsDate(raw) {
       if (!raw) return null;
       const clean = raw.trim();
       if (clean.length === 8) {
         return new Date(
-          parseInt(clean.slice(0, 4)),
-          parseInt(clean.slice(4, 6)) - 1,
-          parseInt(clean.slice(6, 8)), 0, 0, 0
+          parseInt(clean.slice(0, 4), 10),
+          parseInt(clean.slice(4, 6), 10) - 1,
+          parseInt(clean.slice(6, 8), 10),
+          0, 0, 0
         );
       }
-      const y = parseInt(clean.slice(0, 4));
-      const m = parseInt(clean.slice(4, 6)) - 1;
-      const d = parseInt(clean.slice(6, 8));
-      const hh = parseInt(clean.slice(9, 11)) || 0;
-      const mm = parseInt(clean.slice(11, 13)) || 0;
-      const ss = parseInt(clean.slice(13, 15)) || 0;
+      const y = parseInt(clean.slice(0, 4), 10);
+      const m = parseInt(clean.slice(4, 6), 10) - 1;
+      const d = parseInt(clean.slice(6, 8), 10);
+      const hh = parseInt(clean.slice(9, 11), 10) || 0;
+      const mm = parseInt(clean.slice(11, 13), 10) || 0;
+      const ss = parseInt(clean.slice(13, 15), 10) || 0;
       if (clean.endsWith('Z')) {
         return new Date(Date.UTC(y, m, d, hh, mm, ss));
       }
@@ -326,10 +1103,23 @@
 
     function cleanIcsText(txt) {
       if (!txt) return "";
-      return txt.replace(/\\n/gi, ' ').replace(/\\,/g, ',').replace(/\\;/g, ';').trim();
+      return txt
+        .replace(/\\n/gi, ' • ')
+        .replace(/\\,/g, ',')
+        .replace(/\\;/g, ';')
+        .replace(/\\\\/g, '\\')
+        .trim();
     }
 
-async function fetchTextWithFallback(targetUrl) {
+    function formatDuration(start, end) {
+      const diffMinutes = Math.max(0, Math.round((end - start) / 60000));
+      const h = Math.floor(diffMinutes / 60);
+      const m = diffMinutes % 60;
+      if (h === 0) return `${m} min`;
+      return m === 0 ? `${h}h00` : `${h}h${String(m).padStart(2, '0')}`;
+    }
+
+    async function fetchTextWithFallback(targetUrl) {
       const urls = [
         targetUrl,
         `https://corsproxy.io/?${encodeURIComponent(targetUrl)}`,
@@ -338,25 +1128,170 @@ async function fetchTextWithFallback(targetUrl) {
       ];
       for (const u of urls) {
         try {
-          const r = await fetch(u, { cache: "no-store" });
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 7000);
+          const r = await fetch(u, { cache: "no-store", signal: controller.signal });
+          clearTimeout(timeoutId);
           if (r.ok) {
             const text = await r.text();
             if (text.includes("BEGIN:VCALENDAR")) return text;
           }
-        } catch (err) {}
+        } catch (err) {
+          // Essaie le proxy suivant
+        }
       }
-      throw new Error("Impossible de charger le flux ICS Unistra");
+      throw new Error("Impossible de charger le flux ICS");
+    }
+
+    function renderSchedule(events) {
+      const container = document.getElementById('schedule-container');
+      const countBadge = document.getElementById('schedule-count');
+      const volumeBadge = document.getElementById('schedule-volume');
+      const now = new Date();
+
+      // Tri chronologique strict
+      const sorted = [...events].sort((a, b) => a.start - b.start);
+
+      // Calcul du volume horaire total de la journée
+      let totalMinutes = 0;
+      sorted.forEach(ev => {
+        totalMinutes += Math.max(0, Math.round((ev.end - ev.start) / 60000));
+      });
+      const totalH = Math.floor(totalMinutes / 60);
+      const totalM = totalMinutes % 60;
+      volumeBadge.textContent = totalMinutes > 0
+        ? `Total : ${totalH}h${String(totalM).padStart(2, '0')}`
+        : `0h00`;
+
+      // Cas où il n'y a aucun cours aujourd'hui
+      if (sorted.length === 0) {
+        countBadge.textContent = "Journée libre";
+        container.setAttribute('data-density', 'normal');
+        container.innerHTML = `
+          <div class="empty-state-box">
+            <div class="empty-icon-circle">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+                <rect width="18" height="18" x="3" y="4" rx="2" ry="2"></rect>
+                <line x1="16" x2="16" y1="2" y2="6"></line>
+                <line x1="8" x2="8" y1="2" y2="6"></line>
+                <line x1="3" x2="21" y1="10" y2="10"></line>
+                <path d="m9 16 2 2 4-4"></path>
+              </svg>
+            </div>
+            <div class="empty-title">Aucun cours programmé aujourd'hui</div>
+            <div class="empty-desc">
+              Votre emploi du temps ne comporte aucun créneau pour cette journée.
+            </div>
+          </div>
+        `;
+        return;
+      }
+
+      // Adaptation automatique de la densité verticale selon le nombre de cours du jour
+      if (sorted.length <= 3) {
+        container.setAttribute('data-density', 'spacious');
+      } else if (sorted.length <= 5) {
+        container.setAttribute('data-density', 'normal');
+      } else if (sorted.length <= 6) {
+        container.setAttribute('data-density', 'compact');
+      } else {
+        container.setAttribute('data-density', 'ultra');
+      }
+
+      countBadge.textContent = `${sorted.length} ${sorted.length === 1 ? 'créneau' : 'créneaux'}`;
+
+      // Repérer le prochain cours à venir
+      let nextCourseIndex = -1;
+      for (let i = 0; i < sorted.length; i++) {
+        if ( sorted[i].start > now ) {
+          nextCourseIndex = i;
+          break;
+        }
+      }
+
+      container.innerHTML = sorted.map((ev, index) => {
+        const startStr = ev.start.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+        const endStr = ev.end.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+        const durationStr = formatDuration(ev.start, ev.end);
+
+        const isOngoing = now >= ev.start && now <= ev.end;
+        const isPast = now > ev.end;
+        const isNext = !isOngoing && !isPast && index === nextCourseIndex;
+
+        let cardClass = '';
+        let statusHtml = '';
+        let progressBarHtml = '';
+
+        if (isOngoing) {
+          cardClass = 'ongoing';
+          const totalMs = Math.max(1, ev.end - ev.start);
+          const elapsedMs = Math.max(0, now - ev.start);
+          const pct = Math.min(100, Math.max(0, Math.round((elapsedMs / totalMs) * 100)));
+          const remMin = Math.max(1, Math.ceil((ev.end - now) / 60000));
+          const remFormatted = remMin >= 60
+            ? `Reste ${Math.floor(remMin / 60)}h${String(remMin % 60).padStart(2, '0')}`
+            : `Reste ${remMin} min`;
+
+          statusHtml = `
+            <span class="course-badge badge-ongoing">En cours</span>
+            <span class="course-remaining">${remFormatted}</span>
+          `;
+          progressBarHtml = `
+            <div class="course-progress-track">
+              <div class="course-progress-fill" style="width: ${pct}%;"></div>
+            </div>
+          `;
+        } else if (isNext) {
+          cardClass = 'next-up';
+          const waitMin = Math.max(1, Math.round((ev.start - now) / 60000));
+          const waitFormatted = waitMin >= 60
+            ? `Dans ${Math.floor(waitMin / 60)}h${String(waitMin % 60).padStart(2, '0')}`
+            : `Dans ${waitMin} min`;
+
+          statusHtml = `
+            <span class="course-badge badge-next">Suivant</span>
+            <span class="course-remaining">${waitFormatted}</span>
+          `;
+        } else if (isPast) {
+          cardClass = 'past';
+          statusHtml = `<span class="course-badge badge-past">Terminé</span>`;
+        }
+
+        const locationText = ev.location || "Salle non spécifiée";
+
+        return `
+          <article class="course-card ${cardClass}">
+            <div class="course-time-col">
+              <div class="course-time-range">${startStr} – ${endStr}</div>
+              <div class="course-duration">${durationStr}</div>
+            </div>
+
+            <div class="course-info-col">
+              <div class="course-title" title="${ev.title.replace(/"/g, '&quot;')}">${ev.title}</div>
+              <div class="course-location">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"></path>
+                  <circle cx="12" cy="10" r="3"></circle>
+                </svg>
+                <span>${locationText}</span>
+              </div>
+            </div>
+
+            <div class="course-status-col">
+              ${statusHtml}
+            </div>
+            ${progressBarHtml}
+          </article>
+        `;
+      }).join('');
     }
 
     async function fetchSchedule() {
-      const container = document.getElementById('schedule-container');
-      const summaryEl = document.getElementById('schedule-summary');
+      if (viewMode !== 0) return; // Ne pas écraser si l'utilisateur teste un mode démo
 
-      if (!CONFIG.icsUrl || CONFIG.icsUrl === "COLLEZ_VOTRE_LIEN_ICS_ICI") {
-        summaryEl.textContent = "Configuration requise";
-        container.innerHTML = `<div class="empty-schedule">Ajoutez votre lien .ics dans la variable CONFIG.icsUrl du fichier index.html</div>`;
-        return;
-      }
+      const lastUpdatedEl = document.getElementById('last-updated-text');
+      const syncDot = document.getElementById('sync-dot');
+      const syncLabel = document.getElementById('sync-label');
 
       try {
         const rawIcs = await fetchTextWithFallback(CONFIG.icsUrl);
@@ -386,51 +1321,118 @@ async function fetchTextWithFallback(targetUrl) {
             todaysEvents.push({
               start: startDate,
               end: endDate,
-              title: cleanIcsText(summaryMatch ? summaryMatch[1] : "Événement"),
+              title: cleanIcsText(summaryMatch ? summaryMatch[1] : "Cours universitaire"),
               location: cleanIcsText(locationMatch ? locationMatch[1] : "")
             });
           }
         }
 
-        todaysEvents.sort((a, b) => a.start - b.start);
+        cachedTodaysEvents = todaysEvents;
+        renderSchedule(cachedTodaysEvents);
 
-        if (todaysEvents.length === 0) {
-          summaryEl.textContent = "Aucun événement aujourd'hui";
-          container.innerHTML = `<div class="empty-schedule">Aucun cours ou rendez-vous prévu pour aujourd'hui 🎉</div>`;
-          return;
+        const syncTime = now.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+        lastUpdatedEl.textContent = `Calendrier Unistra synchronisé à ${syncTime}`;
+        syncDot.style.backgroundColor = "var(--accent-emerald)";
+        syncLabel.textContent = "En direct";
+      } catch (err) {
+        console.error("Erreur emploi du temps :", err);
+        lastUpdatedEl.textContent = "Échec de connexion au flux ICS — Nouvelle tentative automatique...";
+        syncDot.style.backgroundColor = "var(--accent-amber)";
+        syncLabel.textContent = "Hors ligne";
+
+        if (cachedTodaysEvents.length === 0) {
+          renderSchedule([]);
         }
-
-        summaryEl.textContent = `${todaysEvents.length} créneau${todaysEvents.length === 1 ? '' : 'x'} aujourd'hui`;
-        container.innerHTML = '';
-
-        todaysEvents.slice(0, 4).forEach(ev => {
-          const startStr = ev.start.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
-          const endStr = ev.end.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
-          const isOngoing = now >= ev.start && now <= ev.end;
-          const isPast = now > ev.end;
-
-          const statusClass = isOngoing ? 'ongoing' : (isPast ? 'past' : '');
-          const liveBadge = isOngoing ? `<span class="badge-live">En cours</span>` : '';
-
-          container.innerHTML += `
-            <div class="event-card ${statusClass}">
-              <div class="event-time">
-                <span>${startStr} - ${endStr}</span>
-                ${liveBadge}
-              </div>
-              <div class="event-title">${ev.title}</div>
-              <div class="event-location">${ev.location ? '📍 ' + ev.location : '&nbsp;'}</div>
-            </div>`;
-        });
-      } catch (e) {
-        console.error("Erreur emploi du temps:", e);
-        summaryEl.textContent = "Erreur de synchronisation";
-        container.innerHTML = `<div class="empty-schedule">Impossible de récupérer le calendrier (.ics)</div>`;
       }
     }
 
+    /* ==========================================================================
+       5. GÉNÉRATEUR DE MODES DÉMO (POUR VÉRIFIER MULTI-COURS & ÉTAT VIDE)
+       ========================================================================== */
+    function buildDemoEvents(mode) {
+      const now = new Date();
+      const y = now.getFullYear();
+      const m = now.getMonth();
+      const d = now.getDate();
+
+      if (mode === 1) {
+        // Journée très dense (7 cours sur la même journée)
+        return [
+          { start: new Date(y, m, d, 8, 0),  end: new Date(y, m, d, 9, 30),  title: "CM — Architecture des Systèmes & Réseaux", location: "Amphi Cavaillès • Le Patio" },
+          { start: new Date(y, m, d, 9, 45), end: new Date(y, m, d, 11, 15), title: "TD — Algorithmique et Structures de Données", location: "Salle B204 • UFR Math-Info" },
+          { start: new Date(y, m, d, 11, 30), end: new Date(y, m, d, 12, 30), title: "Séminaire — Méthodologie Scientifique", location: "Salle de Conférence • Institut Le Bel" },
+          { start: new Date(y, m, d, 13, 30), end: new Date(y, m, d, 15, 0),  title: "TP — Programmation Système en C", location: "Salle A108 (Machines) • UFR Math-Info" },
+          { start: new Date(y, m, d, 15, 15), end: new Date(y, m, d, 16, 45), title: "CM — Bases de Données Relationnelles", location: "Amphi 3 • Le Platane" },
+          { start: new Date(y, m, d, 17, 0),  end: new Date(y, m, d, 18, 30), title: "TD — Anglais Technique et Académique", location: "Salle 112 • Pangloss" },
+          { start: new Date(y, m, d, 18, 45), end: new Date(y, m, d, 20, 0),  title: "Projet Tutoré — Point d'équipe hebdomadaire", location: "Espace Coworking • Atrium" }
+        ];
+      }
+
+      if (mode === 2) {
+        // Journée avec un cours actif exactement maintenant
+        const currentStart = new Date(now.getTime() - 25 * 60000);
+        const currentEnd = new Date(now.getTime() + 65 * 60000);
+        const pastStart = new Date(now.getTime() - 150 * 60000);
+        const pastEnd = new Date(now.getTime() - 40 * 60000);
+        const nextStart = new Date(now.getTime() + 80 * 60000);
+        const nextEnd = new Date(now.getTime() + 170 * 60000);
+        const lateStart = new Date(now.getTime() + 185 * 60000);
+        const lateEnd = new Date(now.getTime() + 275 * 60000);
+
+        return [
+          { start: pastStart, end: pastEnd, title: "CM — Analyse Numérique et Matricielle", location: "Amphi A • UFR Math-Info" },
+          { start: currentStart, end: currentEnd, title: "TP — Développement Web & Interfaces Temps Réel", location: "Salle E302 • Bâtiment Atrium" },
+          { start: nextStart, end: nextEnd, title: "TD — Probabilités et Statistiques Appliquées", location: "Salle 208 • Le Patio" },
+          { start: lateStart, end: lateEnd, title: "Conférence — Sécurité des Systèmes Embarqués", location: "Grand Amphithéâtre • Université de Strasbourg" }
+        ];
+      }
+
+      // Mode 3 : Journée vide
+      return [];
+    }
+
+    function cycleViewMode() {
+      viewMode = (viewMode + 1) % 4;
+      const btn = document.getElementById('demo-toggle-btn');
+      const lastUpdatedEl = document.getElementById('last-updated-text');
+
+      if (viewMode === 0) {
+        btn.textContent = "Source : Calendrier Live (Touche D : Tester vues)";
+        fetchSchedule();
+      } else if (viewMode === 1) {
+        btn.textContent = "Mode Test : Journée dense (7 cours)";
+        lastUpdatedEl.textContent = "Aperçu de démonstration — Adaptation automatique 7 créneaux";
+        renderSchedule(buildDemoEvents(1));
+      } else if (viewMode === 2) {
+        btn.textContent = "Mode Test : Cours en direct (4 cours)";
+        lastUpdatedEl.textContent = "Aperçu de démonstration — Barre de progression en direct";
+        renderSchedule(buildDemoEvents(2));
+      } else if (viewMode === 3) {
+        btn.textContent = "Mode Test : Aucun cours (Journée libre)";
+        lastUpdatedEl.textContent = "Aperçu de démonstration — Affichage journée sans cours";
+        renderSchedule(buildDemoEvents(3));
+      }
+    }
+
+    document.getElementById('demo-toggle-btn').addEventListener('click', cycleViewMode);
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'd' || e.key === 'D') {
+        cycleViewMode();
+      }
+    });
+
+    // Rafraîchissement de l'état des cours (barres de progression / temps restant) toutes les 30 secondes
+    setInterval(() => {
+      if (viewMode === 0) {
+        renderSchedule(cachedTodaysEvents);
+      } else {
+        renderSchedule(buildDemoEvents(viewMode));
+      }
+    }, 30 * 1000);
+
+    // Synchronisation initiale et périodique (5 minutes) du calendrier ICS
     fetchSchedule();
-    setInterval(fetchSchedule, 5 * 60 * 1000); // Actualise toutes les 5 min
+    setInterval(fetchSchedule, 5 * 60 * 1000);
   </script>
 </body>
 </html>
