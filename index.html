@@ -20,21 +20,21 @@
       background: url('https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1920&q=85') no-repeat center center/cover;
       display: grid;
       grid-template-columns: 1.15fr 1fr;
-      grid-template-rows: minmax(0, 1.35fr) minmax(0, 1fr);
+      grid-template-rows: minmax(0, 1.25fr) minmax(0, 1fr);
       gap: 2.5vh 2vw;
       padding: 3vh 3vw;
     }
     .overlay {
       position: fixed;
       inset: 0;
-      background: linear-gradient(135deg, rgba(15,23,42,0.72) 0%, rgba(15,23,42,0.42) 100%);
+      background: linear-gradient(135deg, rgba(15,23,42,0.75) 0%, rgba(15,23,42,0.45) 100%);
       z-index: 0;
     }
     .card {
       position: relative;
       z-index: 1;
       min-height: 0;
-      background: rgba(15, 23, 42, 0.58);
+      background: rgba(15, 23, 42, 0.60);
       backdrop-filter: blur(14px);
       -webkit-backdrop-filter: blur(14px);
       border: 1px solid rgba(255, 255, 255, 0.15);
@@ -110,69 +110,108 @@
       margin-top: 0.6vh;
       font-weight: 700;
     }
-    /* Bloc Actualités */
-    .news-panel {
+    /* Bloc Emploi du temps du jour */
+    .schedule-panel {
       grid-column: 1 / -1;
       display: flex;
       flex-direction: column;
       justify-content: space-between;
-      gap: 1.5vh;
+      gap: 1.8vh;
     }
-    .news-header {
-      font-size: 2.1vh;
+    .schedule-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 2.2vh;
       text-transform: uppercase;
       letter-spacing: 0.15vw;
       color: #38bdf8;
       font-weight: 700;
       flex-shrink: 0;
     }
-    .news-grid {
+    .schedule-count {
+      font-size: 1.9vh;
+      color: #94a3b8;
+      text-transform: none;
+      letter-spacing: 0;
+      font-weight: 500;
+    }
+    .schedule-grid {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 1.8vw;
+      grid-template-columns: repeat(auto-fit, minmax(18vw, 1fr));
+      gap: 1.5vw;
       flex: 1;
       min-height: 0;
     }
-    .news-item {
-      background: rgba(255, 255, 255, 0.05);
+    .event-card {
+      background: rgba(255, 255, 255, 0.06);
       padding: 2vh 1.5vw;
-      border-radius: 1.5vh;
-      border-left: 0.35vw solid #38bdf8;
+      border-radius: 1.6vh;
+      border-left: 0.4vw solid #38bdf8;
       display: flex;
       flex-direction: column;
       justify-content: space-between;
       min-height: 0;
     }
-    .news-title {
-      font-size: 2.3vh;
-      font-weight: 600;
-      line-height: 1.35;
+    .event-card.ongoing {
+      background: rgba(56, 189, 248, 0.16);
+      border-left-color: #22c55e;
+    }
+    .event-card.past {
+      opacity: 0.5;
+      border-left-color: #64748b;
+    }
+    .event-time {
+      font-size: 2.1vh;
+      font-weight: 700;
+      color: #38bdf8;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .event-card.ongoing .event-time {
+      color: #4ade80;
+    }
+    .badge-live {
+      font-size: 1.5vh;
+      background: #22c55e;
+      color: #0f172a;
+      padding: 0.3vh 0.6vw;
+      border-radius: 0.8vh;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+    .event-title {
+      font-size: 2.4vh;
+      font-weight: 700;
+      line-height: 1.3;
+      margin: 1vh 0;
       display: -webkit-box;
-      -webkit-line-clamp: 3;
+      -webkit-line-clamp: 2;
       -webkit-box-orient: vertical;
       overflow: hidden;
     }
-    .news-time {
-      font-size: 1.8vh;
-      color: #94a3b8;
-      margin-top: 1vh;
+    .event-location {
+      font-size: 1.9vh;
+      color: #cbd5e1;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
-    /* Petit bandeau d'aide qui disparaît en plein écran */
-    #fs-hint {
-      position: fixed;
-      bottom: 1vh;
-      right: 1.5vw;
-      z-index: 10;
-      font-size: 1.6vh;
-      color: rgba(255,255,255,0.45);
-      pointer-events: none;
-    }
-    :fullscreen #fs-hint, :-webkit-full-screen #fs-hint {
-      display: none;
+    .empty-schedule {
+      grid-column: 1 / -1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(255, 255, 255, 0.04);
+      border-radius: 1.6vh;
+      font-size: 2.5vh;
+      color: #cbd5e1;
+      height: 100%;
     }
   </style>
 </head>
-<body onclick="toggleFullScreen()">
+<body>
   <div class="overlay"></div>
 
   <!-- Gauche : Heure & Date -->
@@ -193,33 +232,23 @@
     <div class="forecast-grid" id="forecast"></div>
   </div>
 
-  <!-- Bas : Actualités RSS en direct -->
-  <div class="card news-panel">
-    <div class="news-header">À la une • Actualités en direct</div>
-    <div class="news-grid" id="news-container"></div>
+  <!-- Bas : Emploi du temps du jour -->
+  <div class="card schedule-panel">
+    <div class="schedule-header">
+      <span>Emploi du temps du jour</span>
+      <span class="schedule-count" id="schedule-summary">Chargement...</span>
+    </div>
+    <div class="schedule-grid" id="schedule-container"></div>
   </div>
 
-  <div id="fs-hint">Appuyez sur OK (bouton central) pour le plein écran</div>
-
   <script>
-    // PLEIN ÉCRAN AU CLIC DE LA TÉLÉCOMMANDE
-    function toggleFullScreen() {
-      const elem = document.documentElement;
-      if (!document.fullscreenElement && !document.webkitFullscreenElement) {
-        if (elem.requestFullscreen) {
-          elem.requestFullscreen();
-        } else if (elem.webkitRequestFullscreen) {
-          elem.webkitRequestFullscreen();
-        }
-      }
-    }
-
     // 1. CONFIGURATION
     const CONFIG = {
       city: "Strasbourg",
       lat: 48.5734,
       lon: 7.7521,
-      rssUrl: "https://www.francetvinfo.fr/titres.rss"
+      // Collez ci-dessous votre lien .ics (ADE Campus / ENT ou Google Agenda) :
+      icsUrl: "COLLEZ_VOTRE_LIEN_ICS_ICI"
     };
 
     // 2. HORLOGE TEMPS RÉEL
@@ -235,7 +264,7 @@
     setInterval(updateClock, 1000);
     updateClock();
 
-    // 3. MÉTÉO GRATUITE SANS CLÉ API (Open-Meteo)
+    // 3. MÉTÉO (Open-Meteo)
     const WMO_CODES = {
       0: "Ciel dégagé ☀️", 1: "Peu nuageux 🌤️", 2: "Partiellement nuageux ⛅",
       3: "Couvert ☁️", 45: "Brouillard 🌫️", 51: "Bruine légère 🌦️",
@@ -273,29 +302,131 @@
     fetchWeather();
     setInterval(fetchWeather, 15 * 60 * 1000);
 
-    // 4. ACTUALITÉS RSS
-    async function fetchNews() {
+    // 4. EMPLOI DU TEMPS DU JOUR (Lecteur .ICS intégré)
+    function parseIcsDate(raw) {
+      if (!raw) return null;
+      const clean = raw.trim();
+      if (clean.length === 8) {
+        return new Date(
+          parseInt(clean.slice(0, 4)),
+          parseInt(clean.slice(4, 6)) - 1,
+          parseInt(clean.slice(6, 8)), 0, 0, 0
+        );
+      }
+      const y = parseInt(clean.slice(0, 4));
+      const m = parseInt(clean.slice(4, 6)) - 1;
+      const d = parseInt(clean.slice(6, 8));
+      const hh = parseInt(clean.slice(9, 11)) || 0;
+      const mm = parseInt(clean.slice(11, 13)) || 0;
+      const ss = parseInt(clean.slice(13, 15)) || 0;
+      if (clean.endsWith('Z')) {
+        return new Date(Date.UTC(y, m, d, hh, mm, ss));
+      }
+      return new Date(y, m, d, hh, mm, ss);
+    }
+
+    function cleanIcsText(txt) {
+      if (!txt) return "";
+      return txt.replace(/\\n/gi, ' ').replace(/\\,/g, ',').replace(/\\;/g, ';').trim();
+    }
+
+    async function fetchTextWithFallback(targetUrl) {
+      const proxies = [
+        `https://api.allorigins.win/raw?url=${encodeURIComponent(targetUrl)}`,
+        `https://corsproxy.io/?${encodeURIComponent(targetUrl)}`
+      ];
+      for (const p of proxies) {
+        try {
+          const r = await fetch(p);
+          if (r.ok) return await r.text();
+        } catch (err) {}
+      }
+      throw new Error("Impossible de charger le flux ICS");
+    }
+
+    async function fetchSchedule() {
+      const container = document.getElementById('schedule-container');
+      const summaryEl = document.getElementById('schedule-summary');
+
+      if (!CONFIG.icsUrl || CONFIG.icsUrl === "COLLEZ_VOTRE_LIEN_ICS_ICI") {
+        summaryEl.textContent = "Configuration requise";
+        container.innerHTML = `<div class="empty-schedule">Ajoutez votre lien .ics dans la variable CONFIG.icsUrl du fichier index.html</div>`;
+        return;
+      }
+
       try {
-        const apiUrl = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(CONFIG.rssUrl)}`;
-        const res = await fetch(apiUrl);
-        const data = await res.json();
-        const container = document.getElementById('news-container');
+        const rawIcs = await fetchTextWithFallback(CONFIG.icsUrl);
+        const unfolded = rawIcs.replace(/\r?\n[ \t]/g, '');
+        const blocks = unfolded.split('BEGIN:VEVENT').slice(1);
+
+        const now = new Date();
+        const todayKey = now.toLocaleDateString('fr-CA'); // YYYY-MM-DD local
+
+        const todaysEvents = [];
+
+        for (const block of blocks) {
+          const endBlock = block.split('END:VEVENT')[0];
+          const dtStartMatch = endBlock.match(/DTSTART(?:;[^:]*)?:([^\r\n]+)/);
+          const dtEndMatch = endBlock.match(/DTEND(?:;[^:]*)?:([^\r\n]+)/);
+          const summaryMatch = endBlock.match(/SUMMARY(?:;[^:]*)?:([^\r\n]+)/);
+          const locationMatch = endBlock.match(/LOCATION(?:;[^:]*)?:([^\r\n]+)/);
+
+          if (!dtStartMatch) continue;
+          const startDate = parseIcsDate(dtStartMatch[1]);
+          const endDate = dtEndMatch ? parseIcsDate(dtEndMatch[1]) : startDate;
+
+          if (!startDate) continue;
+          const eventDayKey = startDate.toLocaleDateString('fr-CA');
+
+          if (eventDayKey === todayKey) {
+            todaysEvents.push({
+              start: startDate,
+              end: endDate,
+              title: cleanIcsText(summaryMatch ? summaryMatch[1] : "Événement"),
+              location: cleanIcsText(locationMatch ? locationMatch[1] : "")
+            });
+          }
+        }
+
+        todaysEvents.sort((a, b) => a.start - b.start);
+
+        if (todaysEvents.length === 0) {
+          summaryEl.textContent = "Aucun événement aujourd'hui";
+          container.innerHTML = `<div class="empty-schedule">Aucun cours ou rendez-vous prévu pour aujourd'hui 🎉</div>`;
+          return;
+        }
+
+        summaryEl.textContent = `${todaysEvents.length} créneau${todaysEvents.length === 1 ? '' : 'x'} aujourd'hui`;
         container.innerHTML = '';
 
-        data.items.slice(0, 3).forEach(item => {
-          const pubTime = new Date(item.pubDate).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+        todaysEvents.slice(0, 4).forEach(ev => {
+          const startStr = ev.start.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+          const endStr = ev.end.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+          const isOngoing = now >= ev.start && now <= ev.end;
+          const isPast = now > ev.end;
+
+          const statusClass = isOngoing ? 'ongoing' : (isPast ? 'past' : '');
+          const liveBadge = isOngoing ? `<span class="badge-live">En cours</span>` : '';
+
           container.innerHTML += `
-            <div class="news-item">
-              <div class="news-title">${item.title}</div>
-              <div class="news-time">Publié à ${pubTime}</div>
+            <div class="event-card ${statusClass}">
+              <div class="event-time">
+                <span>${startStr} - ${endStr}</span>
+                ${liveBadge}
+              </div>
+              <div class="event-title">${ev.title}</div>
+              <div class="event-location">${ev.location ? '📍 ' + ev.location : '&nbsp;'}</div>
             </div>`;
         });
       } catch (e) {
-        console.error("Erreur RSS:", e);
+        console.error("Erreur emploi du temps:", e);
+        summaryEl.textContent = "Erreur de synchronisation";
+        container.innerHTML = `<div class="empty-schedule">Impossible de récupérer le calendrier (.ics)</div>`;
       }
     }
-    fetchNews();
-    setInterval(fetchNews, 10 * 60 * 1000);
+
+    fetchSchedule();
+    setInterval(fetchSchedule, 5 * 60 * 1000); // Actualise toutes les 5 min
   </script>
 </body>
 </html>
