@@ -242,13 +242,12 @@
   </div>
 
   <script>
-    // 1. CONFIGURATION
+   // 1. CONFIGURATION
     const CONFIG = {
       city: "Strasbourg",
       lat: 48.5734,
       lon: 7.7521,
-      // Collez ci-dessous votre lien .ics (ADE Campus / ENT ou Google Agenda) :
-      icsUrl: "COLLEZ_VOTRE_LIEN_ICS_ICI"
+      icsUrl: "https://monemploidutemps.unistra.fr/api/calendar/1fd1f31b-e0f0-4588-a8dd-0985914d395a/export"
     };
 
     // 2. HORLOGE TEMPS RÉEL
@@ -330,18 +329,23 @@
       return txt.replace(/\\n/gi, ' ').replace(/\\,/g, ',').replace(/\\;/g, ';').trim();
     }
 
-    async function fetchTextWithFallback(targetUrl) {
-      const proxies = [
+async function fetchTextWithFallback(targetUrl) {
+      const urls = [
+        targetUrl,
+        `https://corsproxy.io/?${encodeURIComponent(targetUrl)}`,
         `https://api.allorigins.win/raw?url=${encodeURIComponent(targetUrl)}`,
-        `https://corsproxy.io/?${encodeURIComponent(targetUrl)}`
+        `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(targetUrl)}`
       ];
-      for (const p of proxies) {
+      for (const u of urls) {
         try {
-          const r = await fetch(p);
-          if (r.ok) return await r.text();
+          const r = await fetch(u, { cache: "no-store" });
+          if (r.ok) {
+            const text = await r.text();
+            if (text.includes("BEGIN:VCALENDAR")) return text;
+          }
         } catch (err) {}
       }
-      throw new Error("Impossible de charger le flux ICS");
+      throw new Error("Impossible de charger le flux ICS Unistra");
     }
 
     async function fetchSchedule() {
