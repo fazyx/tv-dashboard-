@@ -1,0 +1,2147 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tableau de Bord — Smart TV</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    /* ==========================================================================
+       1. VARIABLES & DESIGN TOKENS (THÈME SOMBRE ARCHITECTURAL)
+       ========================================================================== */
+    :root {
+      --bg-base: #07090e;
+      --bg-card: #0f141e;
+      --bg-elevated: rgba(255, 255, 255, 0.03);
+      --bg-elevated-strong: rgba(255, 255, 255, 0.055);
+
+      --border-card: rgba(255, 255, 255, 0.08);
+      --border-subtle: rgba(255, 255, 255, 0.06);
+      --border-highlight: rgba(255, 255, 255, 0.14);
+
+      --text-primary: #f8fafc;
+      --text-secondary: #94a3b8;
+      --text-muted: #64748b;
+
+      --accent-blue: #38bdf8;
+      --accent-blue-soft: rgba(56, 189, 248, 0.12);
+      --accent-emerald: #10b981;
+      --accent-emerald-soft: rgba(16, 185, 129, 0.14);
+      --accent-spotify: #1db954;
+      --accent-spotify-soft: rgba(29, 185, 84, 0.14);
+
+      --temp-max: #fca5a5;
+      --temp-min: #7dd3fc;
+
+      --radius-card: 1.8vh;
+      --radius-md: 1.2vh;
+      --radius-sm: 0.8vh;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html, body {
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      background-color: var(--bg-base);
+      color: var(--text-primary);
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      font-variant-numeric: tabular-nums;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      user-select: none;
+    }
+
+    /* ==========================================================================
+       2. GRILLE PRINCIPALE SMART TV (100vw x 100vh, SANS DÉFILEMENT)
+       ========================================================================== */
+    body {
+      background-image:
+        radial-gradient(circle at 15% 15%, rgba(56, 189, 248, 0.045) 0%, transparent 45%),
+        radial-gradient(circle at 85% 85%, rgba(16, 185, 129, 0.035) 0%, transparent 45%);
+      display: grid;
+      grid-template-columns: 1.05fr 0.95fr;
+      grid-template-rows: minmax(0, 0.72fr) minmax(0, 0.78fr) minmax(0, 1.5fr);
+      gap: 2vh 1.8vw;
+      padding: 2.6vh 2.4vw;
+      position: relative;
+    }
+
+    /* Structure commune des cartes */
+    .card {
+      background-color: var(--bg-card);
+      border: 1px solid var(--border-card);
+      border-radius: var(--radius-card);
+      padding: 2vh 1.9vw;
+      min-width: 0;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 1.5vh 4vh rgba(0, 0, 0, 0.45);
+    }
+
+    /* ==========================================================================
+       3. HAUT-GAUCHE (RANGÉE 1, COL 1) : WIDGET SPOTIFY
+       ========================================================================== */
+    .spotify-card {
+      grid-column: 1;
+      grid-row: 1;
+      justify-content: center;
+      padding: 1.8vh 1.8vw;
+    }
+
+    /* État A : Non connecté */
+    .spotify-unlinked {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1.2vw;
+      width: 100%;
+    }
+
+    .spotify-unlinked-left {
+      display: flex;
+      align-items: center;
+      gap: 1vw;
+      min-width: 0;
+      flex: 1;
+    }
+
+    .spotify-icon-badge {
+      width: 5.4vh;
+      height: 5.4vh;
+      border-radius: 1.2vh;
+      background: var(--accent-spotify-soft);
+      border: 1px solid rgba(29, 185, 84, 0.25);
+      color: var(--accent-spotify);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .spotify-icon-badge svg {
+      width: 2.8vh;
+      height: 2.8vh;
+    }
+
+    .spotify-unlinked-meta {
+      display: flex;
+      flex-direction: column;
+      gap: 0.55vh;
+      min-width: 0;
+      flex: 1;
+    }
+
+    .spotify-unlinked-title {
+      font-size: 2vh;
+      font-weight: 700;
+      color: var(--text-primary);
+      letter-spacing: -0.01em;
+    }
+
+    .spotify-uri-bar {
+      display: flex;
+      align-items: center;
+      gap: 0.45vw;
+      min-width: 0;
+    }
+
+    .spotify-uri-text {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 1.25vh;
+      color: var(--text-secondary);
+      background: rgba(7, 9, 14, 0.65);
+      border: 1px solid var(--border-subtle);
+      border-radius: 0.6vh;
+      padding: 0.4vh 0.6vw;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      flex: 1;
+      min-width: 0;
+    }
+
+    .spotify-unlinked-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.6vw;
+      flex-shrink: 0;
+    }
+
+    .btn-secondary-sm {
+      background: var(--bg-elevated-strong);
+      border: 1px solid var(--border-card);
+      color: var(--text-secondary);
+      font-family: 'Inter', sans-serif;
+      font-size: 1.35vh;
+      font-weight: 500;
+      padding: 0.95vh 0.9vw;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.18s ease;
+    }
+
+    .btn-secondary-sm:hover {
+      color: var(--text-primary);
+      border-color: var(--border-highlight);
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    .btn-spotify-primary {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45vw;
+      background: var(--accent-spotify);
+      border: none;
+      color: #050806;
+      font-family: 'Inter', sans-serif;
+      font-size: 1.45vh;
+      font-weight: 700;
+      padding: 0.95vh 1.15vw;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      white-space: nowrap;
+      transition: filter 0.18s ease;
+    }
+
+    .btn-spotify-primary:hover {
+      filter: brightness(1.08);
+    }
+
+    .btn-spotify-primary svg {
+      width: 1.75vh;
+      height: 1.75vh;
+    }
+
+    /* État B : Lecture en cours ou En pause */
+    .spotify-active {
+      display: flex;
+      align-items: center;
+      gap: 1.3vw;
+      width: 100%;
+      height: 100%;
+      min-width: 0;
+    }
+
+    .spotify-cover {
+      width: 10.5vh;
+      height: 10.5vh;
+      border-radius: 1.2vh;
+      overflow: hidden;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border-card);
+      flex-shrink: 0;
+      box-shadow: 0 0.6vh 1.8vh rgba(0, 0, 0, 0.4);
+    }
+
+    .spotify-cover img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .spotify-details {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      height: 10.5vh;
+    }
+
+    .spotify-top-strip {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.8vw;
+    }
+
+    .spotify-status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45vw;
+      font-size: 1.25vh;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      padding: 0.3vh 0.65vw;
+      border-radius: 999px;
+      background: var(--accent-spotify-soft);
+      color: var(--accent-spotify);
+      border: 1px solid rgba(29, 185, 84, 0.28);
+    }
+
+    .spotify-status-pill.paused {
+      background: var(--bg-elevated-strong);
+      color: var(--text-secondary);
+      border-color: var(--border-card);
+    }
+
+    .spotify-status-pill svg {
+      width: 1.45vh;
+      height: 1.45vh;
+      flex-shrink: 0;
+    }
+
+    /* Barres d'égaliseur vertes animées */
+    .eq-bars {
+      display: inline-flex;
+      align-items: flex-end;
+      gap: 2px;
+      height: 1.25vh;
+    }
+
+    .eq-bar {
+      width: 2.5px;
+      background: var(--accent-spotify);
+      border-radius: 99px;
+      animation: eqBounce 0.85s ease-in-out infinite alternate;
+    }
+
+    .eq-bar:nth-child(1) { height: 45%; animation-delay: 0.0s; }
+    .eq-bar:nth-child(2) { height: 100%; animation-delay: 0.2s; }
+    .eq-bar:nth-child(3) { height: 60%; animation-delay: 0.4s; }
+    .eq-bar:nth-child(4) { height: 85%; animation-delay: 0.15s; }
+
+    @keyframes eqBounce {
+      0% { transform: scaleY(0.3); }
+      100% { transform: scaleY(1); }
+    }
+
+    .spotify-disconnect-icon-btn {
+      background: transparent;
+      border: 1px solid transparent;
+      color: var(--text-muted);
+      font-family: 'Inter', sans-serif;
+      font-size: 1.2vh;
+      padding: 0.25vh 0.55vw;
+      border-radius: 0.5vh;
+      cursor: pointer;
+      opacity: 0.45;
+      transition: all 0.2s ease;
+    }
+
+    .spotify-card:hover .spotify-disconnect-icon-btn,
+    .spotify-disconnect-icon-btn:focus {
+      opacity: 1;
+      border-color: var(--border-subtle);
+      background: var(--bg-elevated);
+    }
+
+    .spotify-disconnect-icon-btn:hover {
+      color: #fca5a5;
+      border-color: rgba(252, 165, 165, 0.3);
+    }
+
+    .spotify-track-block {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25vh;
+      min-width: 0;
+    }
+
+    .spotify-title {
+      font-size: 2.2vh;
+      font-weight: 700;
+      color: var(--text-primary);
+      line-height: 1.2;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .spotify-sub {
+      font-size: 1.7vh;
+      font-weight: 400;
+      color: var(--text-secondary);
+      line-height: 1.2;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .spotify-progress-row {
+      display: flex;
+      align-items: center;
+      gap: 0.7vw;
+    }
+
+    .spotify-ts {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 1.25vh;
+      color: var(--text-secondary);
+      min-width: 3.8ch;
+    }
+
+    .spotify-ts.right {
+      text-align: right;
+      color: var(--text-muted);
+    }
+
+    .spotify-bar-bg {
+      flex: 1;
+      height: 0.55vh;
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 999px;
+      overflow: hidden;
+    }
+
+    .spotify-bar-fill {
+      height: 100%;
+      background: var(--accent-spotify);
+      border-radius: 999px;
+      transition: width 0.35s linear;
+    }
+
+    .spotify-bar-fill.paused {
+      background: var(--text-secondary);
+    }
+
+    /* État C : Connecté mais inactif (HTTP 204) */
+    .spotify-idle {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1vw;
+      width: 100%;
+    }
+
+    .spotify-idle-left {
+      display: flex;
+      align-items: center;
+      gap: 1vw;
+      min-width: 0;
+    }
+
+    .spotify-idle-texts {
+      display: flex;
+      flex-direction: column;
+      gap: 0.3vh;
+    }
+
+    .spotify-idle-badge {
+      font-size: 1.25vh;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--accent-spotify);
+    }
+
+    .spotify-idle-msg {
+      font-size: 1.85vh;
+      font-weight: 500;
+      color: var(--text-secondary);
+    }
+
+    /* ==========================================================================
+       4. MILIEU-GAUCHE (RANGÉE 2, COL 1) : HORLOGE & DATE (SOBRE, SANS BADGE)
+       ========================================================================== */
+    .clock-card {
+      grid-column: 1;
+      grid-row: 2;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 2vh 2.1vw;
+      gap: 1.1vh;
+    }
+
+    .clock-time {
+      font-size: 9.2vh;
+      font-weight: 700;
+      letter-spacing: -0.04em;
+      line-height: 0.95;
+      color: var(--text-primary);
+    }
+
+    .clock-date {
+      font-size: 2.35vh;
+      font-weight: 500;
+      color: var(--text-secondary);
+      text-transform: capitalize;
+      letter-spacing: -0.01em;
+    }
+
+    /* ==========================================================================
+       5. BAS-GAUCHE (RANGÉE 3, COL 1) : MÉTÉO (STRASBOURG + HEURES + DEMAIN)
+       ========================================================================== */
+    .weather-card {
+      grid-column: 1;
+      grid-row: 3;
+      justify-content: space-between;
+      padding: 2.1vh 1.9vw;
+      gap: 1.3vh;
+    }
+
+    /* Rangée supérieure météo */
+    .weather-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1vw;
+    }
+
+    .weather-city-block {
+      display: flex;
+      align-items: center;
+      gap: 1vw;
+      min-width: 0;
+    }
+
+    .weather-main-icon {
+      width: 6.4vh;
+      height: 6.4vh;
+      border-radius: 1.3vh;
+      background: var(--accent-blue-soft);
+      border: 1px solid rgba(56, 189, 248, 0.22);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--accent-blue);
+      flex-shrink: 0;
+    }
+
+    .weather-main-icon svg {
+      width: 4.8vh;
+      height: 4.8vh;
+    }
+
+    .weather-city-texts {
+      display: flex;
+      flex-direction: column;
+      gap: 0.35vh;
+      min-width: 0;
+    }
+
+    .weather-city-name {
+      font-size: 2.5vh;
+      font-weight: 700;
+      color: var(--text-primary);
+      letter-spacing: -0.02em;
+      line-height: 1.1;
+    }
+
+    .weather-condition-label {
+      font-size: 1.85vh;
+      font-weight: 400;
+      color: var(--text-secondary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .weather-temps-right {
+      display: flex;
+      align-items: center;
+      gap: 1.2vw;
+      flex-shrink: 0;
+    }
+
+    .weather-current-temp {
+      font-size: 8.8vh;
+      font-weight: 700;
+      letter-spacing: -0.04em;
+      line-height: 0.92;
+      color: var(--text-primary);
+    }
+
+    .weather-minmax-stack {
+      display: flex;
+      flex-direction: column;
+      gap: 0.65vh;
+      padding-left: 1vw;
+      border-left: 1px solid var(--border-card);
+    }
+
+    .weather-minmax-row {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 0.6vw;
+    }
+
+    .weather-minmax-tag {
+      font-size: 1.3vh;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+    }
+
+    .weather-minmax-num {
+      font-size: 2.8vh;
+      font-weight: 700;
+      line-height: 1;
+    }
+
+    .weather-minmax-num.max {
+      color: var(--temp-max);
+    }
+
+    .weather-minmax-num.min {
+      color: var(--temp-min);
+    }
+
+    /* Rangée intermédiaire météo : Heure par heure aujourd'hui */
+    .weather-hourly-grid {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 0.55vw;
+      padding-top: 1.2vh;
+      border-top: 1px solid var(--border-subtle);
+    }
+
+    .hourly-slot {
+      background: var(--bg-elevated);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      padding: 0.95vh 0.3vw;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.55vh;
+    }
+
+    .hourly-slot.active {
+      background: var(--accent-blue-soft);
+      border-color: rgba(56, 189, 248, 0.35);
+    }
+
+    .hourly-slot-time {
+      font-size: 1.35vh;
+      font-weight: 600;
+      color: var(--text-secondary);
+    }
+
+    .hourly-slot.active .hourly-slot-time {
+      color: var(--accent-blue);
+    }
+
+    .hourly-slot-icon {
+      width: 2.6vh;
+      height: 2.6vh;
+      color: var(--accent-blue);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .hourly-slot-icon svg {
+      width: 100%;
+      height: 100%;
+    }
+
+    .hourly-slot-temp {
+      font-size: 1.7vh;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    /* Rangée inférieure météo : Demain */
+    .weather-tomorrow-box {
+      background: var(--bg-elevated);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 1.1vh 1.1vw;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1vw;
+    }
+
+    .tomorrow-left-group {
+      display: flex;
+      align-items: center;
+      gap: 0.8vw;
+      min-width: 0;
+    }
+
+    .tomorrow-icon-wrap {
+      width: 3.8vh;
+      height: 3.8vh;
+      border-radius: 0.8vh;
+      background: rgba(56, 189, 248, 0.08);
+      border: 1px solid var(--border-subtle);
+      color: var(--accent-blue);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .tomorrow-icon-wrap svg {
+      width: 2.3vh;
+      height: 2.3vh;
+    }
+
+    .tomorrow-text-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.2vh;
+      min-width: 0;
+    }
+
+    .tomorrow-title {
+      font-size: 1.35vh;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--accent-blue);
+    }
+
+    .tomorrow-cond {
+      font-size: 1.65vh;
+      font-weight: 500;
+      color: var(--text-primary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .tomorrow-temps {
+      display: flex;
+      align-items: center;
+      gap: 0.65vw;
+      font-size: 1.85vh;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+
+    .tomorrow-temps .min {
+      color: var(--temp-min);
+    }
+
+    .tomorrow-temps .sep {
+      color: var(--text-muted);
+      font-weight: 400;
+    }
+
+    .tomorrow-temps .max {
+      color: var(--temp-max);
+    }
+
+    /* ==========================================================================
+       6. COLONNE DROITE PLEINE HAUTEUR (COL 2, RANGÉES 1 À 3) : EMPLOI DU TEMPS
+       ========================================================================== */
+    .schedule-card {
+      grid-column: 2;
+      grid-row: 1 / -1;
+      justify-content: space-between;
+      padding: 2.4vh 2vw;
+    }
+
+    .schedule-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-bottom: 1.8vh;
+      margin-bottom: 1.6vh;
+      border-bottom: 1px solid var(--border-card);
+      flex-shrink: 0;
+    }
+
+    .schedule-title-wrap {
+      display: flex;
+      align-items: center;
+      gap: 0.75vw;
+    }
+
+    .schedule-title-wrap svg {
+      width: 2.7vh;
+      height: 2.7vh;
+      color: var(--accent-blue);
+      flex-shrink: 0;
+    }
+
+    .schedule-title {
+      font-size: 2.5vh;
+      font-weight: 700;
+      color: var(--text-primary);
+      letter-spacing: -0.02em;
+    }
+
+    .schedule-count-badge {
+      padding: 0.6vh 0.95vw;
+      border-radius: var(--radius-sm);
+      font-size: 1.45vh;
+      font-weight: 600;
+      background: var(--accent-blue-soft);
+      border: 1px solid rgba(56, 189, 248, 0.25);
+      color: var(--accent-blue);
+    }
+
+    /* Conteneur adaptatif des cours du jour */
+    .schedule-list {
+      flex: 1;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+      gap: 1.4vh;
+    }
+
+    /* Densités automatiques selon le volume de cours de la journée */
+    .schedule-list[data-density="spacious"] { gap: 1.8vh; }
+    .schedule-list[data-density="normal"]   { gap: 1.3vh; }
+    .schedule-list[data-density="compact"]  { gap: 0.95vh; }
+    .schedule-list[data-density="ultra"]    { gap: 0.7vh; }
+
+    .course-item {
+      position: relative;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border-card);
+      border-left: 0.35vw solid var(--accent-blue);
+      border-radius: var(--radius-md);
+      padding: 1.8vh 1.4vw;
+      display: grid;
+      grid-template-columns: 8.8vw 1fr auto;
+      align-items: center;
+      gap: 1.2vw;
+      flex: 1;
+      min-height: 0;
+      max-height: 15.5vh;
+      overflow: hidden;
+    }
+
+    .schedule-list[data-density="compact"] .course-item {
+      padding: 1.25vh 1.2vw;
+      max-height: 11.5vh;
+    }
+
+    .schedule-list[data-density="ultra"] .course-item {
+      padding: 0.85vh 1.1vw;
+      max-height: 8.8vh;
+      border-radius: var(--radius-sm);
+    }
+
+    /* États temporels des cours */
+    .course-item.past {
+      opacity: 0.42;
+      border-left-color: #475569;
+    }
+
+    .course-item.ongoing {
+      background: linear-gradient(90deg, rgba(16, 185, 129, 0.13) 0%, rgba(255, 255, 255, 0.03) 100%);
+      border-color: rgba(16, 185, 129, 0.35);
+      border-left: 0.4vw solid var(--accent-emerald);
+    }
+
+    .course-item.next {
+      border-color: rgba(56, 189, 248, 0.28);
+      border-left: 0.4vw solid var(--accent-blue);
+    }
+
+    .course-time-col {
+      display: flex;
+      flex-direction: column;
+      gap: 0.35vh;
+      padding-right: 1vw;
+      border-right: 1px solid var(--border-subtle);
+    }
+
+    .course-hours {
+      font-size: 1.95vh;
+      font-weight: 700;
+      color: var(--text-primary);
+      white-space: nowrap;
+    }
+
+    .schedule-list[data-density="compact"] .course-hours { font-size: 1.8vh; }
+    .schedule-list[data-density="ultra"] .course-hours   { font-size: 1.6vh; }
+
+    .course-duration {
+      font-size: 1.3vh;
+      font-weight: 500;
+      color: var(--text-muted);
+    }
+
+    .schedule-list[data-density="ultra"] .course-duration { font-size: 1.15vh; }
+
+    .course-body-col {
+      display: flex;
+      flex-direction: column;
+      gap: 0.55vh;
+      min-width: 0;
+    }
+
+    .schedule-list[data-density="ultra"] .course-body-col { gap: 0.2vh; }
+
+    .course-name {
+      font-size: 2.1vh;
+      font-weight: 600;
+      color: var(--text-primary);
+      line-height: 1.25;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .schedule-list[data-density="compact"] .course-name { font-size: 1.85vh; }
+    .schedule-list[data-density="ultra"] .course-name   { font-size: 1.65vh; }
+
+    .course-room {
+      display: flex;
+      align-items: center;
+      gap: 0.4vw;
+      font-size: 1.55vh;
+      color: var(--text-secondary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .schedule-list[data-density="compact"] .course-room { font-size: 1.4vh; }
+    .schedule-list[data-density="ultra"] .course-room   { font-size: 1.28vh; }
+
+    .course-room svg {
+      width: 1.55vh;
+      height: 1.55vh;
+      color: var(--text-muted);
+      flex-shrink: 0;
+    }
+
+    .course-status-col {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 0.4vh;
+      flex-shrink: 0;
+    }
+
+    .status-pill {
+      padding: 0.45vh 0.75vw;
+      border-radius: 999px;
+      font-size: 1.2vh;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      white-space: nowrap;
+    }
+
+    .schedule-list[data-density="ultra"] .status-pill {
+      padding: 0.3vh 0.6vw;
+      font-size: 1.1vh;
+    }
+
+    .status-pill.ongoing {
+      background: var(--accent-emerald-soft);
+      color: #34d399;
+      border: 1px solid rgba(16, 185, 129, 0.35);
+    }
+
+    .status-pill.next {
+      background: var(--accent-blue-soft);
+      color: var(--accent-blue);
+      border: 1px solid rgba(56, 189, 248, 0.3);
+    }
+
+    .status-pill.past {
+      background: rgba(255, 255, 255, 0.04);
+      color: var(--text-muted);
+    }
+
+    .status-sub {
+      font-size: 1.25vh;
+      color: var(--text-secondary);
+    }
+
+    .course-progress-bar {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 0.35vh;
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .course-progress-fill {
+      height: 100%;
+      background: var(--accent-emerald);
+      transition: width 0.5s ease;
+    }
+
+    /* État vide calme et sobre lorsqu'il n'y a aucun cours */
+    .schedule-empty {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      background: var(--bg-elevated);
+      border: 1px dashed rgba(255, 255, 255, 0.09);
+      border-radius: var(--radius-md);
+      padding: 3vh 2.5vw;
+      gap: 1.6vh;
+    }
+
+    .schedule-empty-icon {
+      width: 7.5vh;
+      height: 7.5vh;
+      border-radius: 50%;
+      background: var(--accent-blue-soft);
+      border: 1px solid rgba(56, 189, 248, 0.2);
+      color: var(--accent-blue);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .schedule-empty-icon svg {
+      width: 3.6vh;
+      height: 3.6vh;
+    }
+
+    .schedule-empty-title {
+      font-size: 2.25vh;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .schedule-empty-desc {
+      font-size: 1.65vh;
+      color: var(--text-secondary);
+      max-width: 28vw;
+      line-height: 1.45;
+    }
+
+    /* Pied de carte discret + bouton mode démo */
+    .schedule-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-top: 1.5vh;
+      margin-top: 1.5vh;
+      border-top: 1px solid var(--border-subtle);
+      font-size: 1.25vh;
+      color: var(--text-muted);
+      flex-shrink: 0;
+    }
+
+    .demo-btn {
+      background: transparent;
+      border: 1px solid transparent;
+      color: var(--text-muted);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 1.2vh;
+      padding: 0.35vh 0.6vw;
+      border-radius: 0.5vh;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .demo-btn:hover {
+      border-color: var(--border-card);
+      color: var(--text-secondary);
+      background: var(--bg-elevated);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- 1. HAUT-GAUCHE : WIDGET SPOTIFY -->
+  <section class="card spotify-card" id="spotify-card" aria-label="Lecteur Spotify">
+    <!-- Injecté dynamiquement par JavaScript -->
+  </section>
+
+  <!-- 2. MILIEU-GAUCHE : HORLOGE & DATE -->
+  <section class="card clock-card" aria-label="Heure et date">
+    <div class="clock-time" id="clock-time">--:--</div>
+    <div class="clock-date" id="clock-date">Chargement de la date...</div>
+  </section>
+
+  <!-- 3. BAS-GAUCHE : MÉTÉO STRASBOURG -->
+  <section class="card weather-card" aria-label="Météo à Strasbourg">
+    <!-- Rangée haute : Ville, condition, icône, température actuelle + Max / Min du jour -->
+    <div class="weather-top">
+      <div class="weather-city-block">
+        <div class="weather-main-icon" id="weather-main-icon"></div>
+        <div class="weather-city-texts">
+          <div class="weather-city-name" id="weather-city">Strasbourg</div>
+          <div class="weather-condition-label" id="weather-desc">Synchronisation...</div>
+        </div>
+      </div>
+
+      <div class="weather-temps-right">
+        <div class="weather-current-temp" id="weather-temp">--°</div>
+        <div class="weather-minmax-stack">
+          <div class="weather-minmax-row">
+            <span class="weather-minmax-tag">Max</span>
+            <span class="weather-minmax-num max" id="weather-max">--°</span>
+          </div>
+          <div class="weather-minmax-row">
+            <span class="weather-minmax-tag">Min</span>
+            <span class="weather-minmax-num min" id="weather-min">--°</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Rangée milieu : Prévisions heure par heure aujourd'hui -->
+    <div class="weather-hourly-grid" id="weather-hourly-grid">
+      <div class="hourly-slot"><span class="hourly-slot-time">08h</span><div class="hourly-slot-icon"></div><span class="hourly-slot-temp">--°</span></div>
+      <div class="hourly-slot"><span class="hourly-slot-time">11h</span><div class="hourly-slot-icon"></div><span class="hourly-slot-temp">--°</span></div>
+      <div class="hourly-slot"><span class="hourly-slot-time">14h</span><div class="hourly-slot-icon"></div><span class="hourly-slot-temp">--°</span></div>
+      <div class="hourly-slot"><span class="hourly-slot-time">17h</span><div class="hourly-slot-icon"></div><span class="hourly-slot-temp">--°</span></div>
+      <div class="hourly-slot"><span class="hourly-slot-time">20h</span><div class="hourly-slot-icon"></div><span class="hourly-slot-temp">--°</span></div>
+      <div class="hourly-slot"><span class="hourly-slot-time">23h</span><div class="hourly-slot-icon"></div><span class="hourly-slot-temp">--°</span></div>
+    </div>
+
+    <!-- Rangée basse : Météo du lendemain -->
+    <div class="weather-tomorrow-box">
+      <div class="tomorrow-left-group">
+        <div class="tomorrow-icon-wrap" id="tomorrow-icon"></div>
+        <div class="tomorrow-text-group">
+          <span class="tomorrow-title" id="tomorrow-day">Demain</span>
+          <span class="tomorrow-cond" id="tomorrow-desc">Chargement...</span>
+        </div>
+      </div>
+      <div class="tomorrow-temps">
+        <span class="min" id="tomorrow-min">Min --°</span>
+        <span class="sep">/</span>
+        <span class="max" id="tomorrow-max">Max --°</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4. COLONNE DROITE PLEINE HAUTEUR : EMPLOI DU TEMPS DU JOUR -->
+  <section class="card schedule-card" aria-label="Emploi du temps du jour">
+    <div class="schedule-header">
+      <div class="schedule-title-wrap">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect width="18" height="18" x="3" y="4" rx="2" ry="2"></rect>
+          <line x1="16" x2="16" y1="2" y2="6"></line>
+          <line x1="8" x2="8" y1="2" y2="6"></line>
+          <line x1="3" x2="21" y1="10" y2="10"></line>
+          <path d="M8 14h.01"></path>
+          <path d="M12 14h.01"></path>
+          <path d="M16 14h.01"></path>
+          <path d="M8 18h.01"></path>
+          <path d="M12 18h.01"></path>
+          <path d="M16 18h.01"></path>
+        </svg>
+        <h1 class="schedule-title">Emploi du temps</h1>
+      </div>
+
+      <span class="schedule-count-badge" id="schedule-count">Chargement...</span>
+    </div>
+
+    <div class="schedule-list" id="schedule-list" data-density="normal">
+      <!-- Cours du jour injectés par JavaScript -->
+    </div>
+
+    <div class="schedule-footer">
+      <span id="schedule-sync-status">Synchronisation calendrier Unistra...</span>
+      <button type="button" class="demo-btn" id="demo-toggle-btn" title="Appuyez sur D pour tester les états">
+        Mode Live (Touche D : Démo)
+      </button>
+    </div>
+  </section>
+
+  <script>
+    /* ==========================================================================
+       1. CONFIGURATION & ÉTAT GLOBAL
+       ========================================================================== */
+    const CONFIG = {
+      city: "Strasbourg",
+      lat: 48.5734,
+      lon: 7.7521,
+      icsUrl: "https://monemploidutemps.unistra.fr/api/calendar/1fd1f31b-e0f0-4588-a8dd-0985914d395a/export",
+      spotifyClientId: "3e9d3847197b40c4b6af8e21e75db7fe",
+      spotifyScopes: "user-read-currently-playing user-read-playback-state"
+    };
+
+    let cachedTodaysEvents = [];
+    // 0 = Live, 1 = 3 cours + Spotify lecture, 2 = 6 cours + Spotify pause, 3 = 0 cours + Spotify inactif
+    let demoMode = 0;
+
+    /* ==========================================================================
+       2. HORLOGE & DATE DU JOUR (SOBRE, SANS BADGE)
+       ========================================================================== */
+    function updateClock() {
+      const now = new Date();
+      const hh = String(now.getHours()).padStart(2, '0');
+      const mm = String(now.getMinutes()).padStart(2, '0');
+      document.getElementById('clock-time').textContent = `${hh}:${mm}`;
+
+      const rawDate = now.toLocaleDateString('fr-FR', {
+        weekday: 'long',
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric'
+      });
+      const capitalizedDate = rawDate.charAt(0).toUpperCase() + rawDate.slice(1);
+      document.getElementById('clock-date').textContent = capitalizedDate;
+    }
+
+    setInterval(updateClock, 1000);
+    updateClock();
+
+    /* ==========================================================================
+       3. WIDGET SPOTIFY — OAUTH 2.0 AUTHORIZATION CODE + PKCE
+       ========================================================================== */
+    const SPOTIFY_KEYS = {
+      accessToken: "tv_dash_spotify_access_token",
+      refreshToken: "tv_dash_spotify_refresh_token",
+      expiresAt: "tv_dash_spotify_expires_at",
+      verifier: "tv_dash_spotify_pkce_verifier",
+      state: "tv_dash_spotify_oauth_state"
+    };
+
+    const SPOTIFY_SVG = `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/></svg>`;
+
+    const COVER_FALLBACK_SVG = "data:image/svg+xml;utf8," + encodeURIComponent(
+      `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120"><rect width="120" height="120" fill="#141b29"/><circle cx="60" cy="60" r="34" fill="none" stroke="#28354d" stroke-width="2"/><circle cx="60" cy="60" r="10" fill="#1db954"/></svg>`
+    );
+
+    let spotifyState = {
+      status: "disconnected", // "disconnected" | "playing" | "paused" | "idle"
+      title: "",
+      artist: "",
+      album: "",
+      coverUrl: "",
+      progressMs: 0,
+      durationMs: 0,
+      lastTick: Date.now()
+    };
+
+    function getSpotifyRedirectUri() {
+      if (window.location.origin && window.location.origin !== "null") {
+        return window.location.origin + window.location.pathname;
+      }
+      return window.location.href.split("?")[0].split("#")[0];
+    }
+
+    function formatTrackTime(ms) {
+      const totalSec = Math.max(0, Math.floor((ms || 0) / 1000));
+      const m = Math.floor(totalSec / 60);
+      const s = totalSec % 60;
+      return `${m}:${String(s).padStart(2, "0")}`;
+    }
+
+    function createRandomString(length) {
+      const charset = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~";
+      const values = new Uint8Array(length);
+      window.crypto.getRandomValues(values);
+      let out = "";
+      for (let i = 0; i < length; i++) {
+        out += charset[values[i] % charset.length];
+      }
+      return out;
+    }
+
+    async function computePkceChallenge(verifier) {
+      const data = new TextEncoder().encode(verifier);
+      const digest = await window.crypto.subtle.digest("SHA-256", data);
+      const bytes = new Uint8Array(digest);
+      let str = "";
+      for (let i = 0; i < bytes.byteLength; i++) {
+        str += String.fromCharCode(bytes[i]);
+      }
+      return btoa(str).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+    }
+
+    function persistSpotifyTokens(payload) {
+      if (payload.access_token) {
+        localStorage.setItem(SPOTIFY_KEYS.accessToken, payload.access_token);
+      }
+      if (payload.refresh_token) {
+        localStorage.setItem(SPOTIFY_KEYS.refreshToken, payload.refresh_token);
+      }
+      if (payload.expires_in) {
+        const expiresAt = Date.now() + Math.max(60, payload.expires_in - 60) * 1000;
+        localStorage.setItem(SPOTIFY_KEYS.expiresAt, String(expiresAt));
+      }
+    }
+
+    function clearSpotifyStorage() {
+      Object.values(SPOTIFY_KEYS).forEach(k => localStorage.removeItem(k));
+    }
+
+    async function initiateSpotifyLogin() {
+      try {
+        const verifier = createRandomString(64);
+        const state = createRandomString(16);
+        localStorage.setItem(SPOTIFY_KEYS.verifier, verifier);
+        localStorage.setItem(SPOTIFY_KEYS.state, state);
+
+        const challenge = await computePkceChallenge(verifier);
+        const query = new URLSearchParams({
+          client_id: CONFIG.spotifyClientId,
+          response_type: "code",
+          redirect_uri: getSpotifyRedirectUri(),
+          scope: CONFIG.spotifyScopes,
+          code_challenge_method: "S256",
+          code_challenge: challenge,
+          state: state
+        });
+
+        window.location.assign(`https://accounts.spotify.com/authorize?${query.toString()}`);
+      } catch (err) {
+        console.error("Erreur lors de l'authentification PKCE Spotify :", err);
+      }
+    }
+
+    async function processSpotifyOAuthCallback() {
+      const params = new URLSearchParams(window.location.search);
+      const code = params.get("code");
+      const error = params.get("error");
+
+      if (!code && !error) return;
+
+      window.history.replaceState({}, document.title, getSpotifyRedirectUri());
+
+      if (error || !code) return;
+
+      const verifier = localStorage.getItem(SPOTIFY_KEYS.verifier);
+      if (!verifier) return;
+
+      try {
+        const body = new URLSearchParams({
+          client_id: CONFIG.spotifyClientId,
+          grant_type: "authorization_code",
+          code: code,
+          redirect_uri: getSpotifyRedirectUri(),
+          code_verifier: verifier
+        });
+
+        const res = await fetch("https://accounts.spotify.com/api/token", {
+          method: "POST",
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          body: body.toString()
+        });
+
+        localStorage.removeItem(SPOTIFY_KEYS.verifier);
+        localStorage.removeItem(SPOTIFY_KEYS.state);
+
+        if (!res.ok) throw new Error(`Échange token Spotify échoué (${res.status})`);
+        const data = await res.json();
+        persistSpotifyTokens(data);
+      } catch (err) {
+        console.error("Erreur callback OAuth Spotify :", err);
+      }
+    }
+
+    async function refreshSpotifyToken() {
+      const refreshToken = localStorage.getItem(SPOTIFY_KEYS.refreshToken);
+      if (!refreshToken) {
+        clearSpotifyStorage();
+        return null;
+      }
+
+      try {
+        const body = new URLSearchParams({
+          client_id: CONFIG.spotifyClientId,
+          grant_type: "refresh_token",
+          refresh_token: refreshToken
+        });
+
+        const res = await fetch("https://accounts.spotify.com/api/token", {
+          method: "POST",
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          body: body.toString()
+        });
+
+        if (!res.ok) {
+          if (res.status === 400 || res.status === 401) clearSpotifyStorage();
+          return null;
+        }
+
+        const data = await res.json();
+        persistSpotifyTokens(data);
+        return data.access_token || null;
+      } catch (err) {
+        console.error("Erreur rafraîchissement token Spotify :", err);
+        return null;
+      }
+    }
+
+    function copyRedirectUriToClipboard(buttonEl) {
+      const uri = getSpotifyRedirectUri();
+      const helper = document.createElement("textarea");
+      helper.value = uri;
+      helper.style.position = "fixed";
+      helper.style.opacity = "0";
+      document.body.appendChild(helper);
+      helper.select();
+      try {
+        document.execCommand("copy");
+        if (buttonEl) {
+          const prev = buttonEl.textContent;
+          buttonEl.textContent = "Copié";
+          buttonEl.style.color = "#1db954";
+          buttonEl.style.borderColor = "rgba(29, 185, 84, 0.45)";
+          setTimeout(() => {
+            buttonEl.textContent = prev;
+            buttonEl.style.color = "";
+            buttonEl.style.borderColor = "";
+          }, 2000);
+        }
+      } catch (err) {
+        console.error("Échec de la copie de l'URI :", err);
+      } finally {
+        document.body.removeChild(helper);
+      }
+    }
+
+    function disconnectSpotifyAccount() {
+      clearSpotifyStorage();
+      spotifyState = {
+        status: "disconnected",
+        title: "",
+        artist: "",
+        album: "",
+        coverUrl: "",
+        progressMs: 0,
+        durationMs: 0,
+        lastTick: Date.now()
+      };
+      renderSpotifyCard();
+    }
+
+    function escapeHtmlAttr(str) {
+      return String(str || "").replace(/"/g, "&quot;");
+    }
+
+    function renderSpotifyCard() {
+      const card = document.getElementById("spotify-card");
+      if (!card) return;
+
+      // État A : Non connecté
+      if (spotifyState.status === "disconnected") {
+        const uri = getSpotifyRedirectUri();
+        card.innerHTML = `
+          <div class="spotify-unlinked">
+            <div class="spotify-unlinked-left">
+              <div class="spotify-icon-badge">${SPOTIFY_SVG}</div>
+              <div class="spotify-unlinked-meta">
+                <div class="spotify-unlinked-title">Connecter Spotify</div>
+                <div class="spotify-uri-bar">
+                  <span class="spotify-uri-text" title="${escapeHtmlAttr(uri)}">${uri}</span>
+                </div>
+              </div>
+            </div>
+            <div class="spotify-unlinked-actions">
+              <button type="button" class="btn-secondary-sm" id="spotify-copy-btn">Copier l'URI</button>
+              <button type="button" class="btn-spotify-primary" id="spotify-login-btn">
+                ${SPOTIFY_SVG}
+                <span>Connecter</span>
+              </button>
+            </div>
+          </div>
+        `;
+        document.getElementById("spotify-copy-btn")?.addEventListener("click", (e) => {
+          copyRedirectUriToClipboard(e.currentTarget);
+        });
+        document.getElementById("spotify-login-btn")?.addEventListener("click", initiateSpotifyLogin);
+        return;
+      }
+
+      const disconnectHtml = demoMode === 0
+        ? `<button type="button" class="spotify-disconnect-icon-btn" id="spotify-logout-btn" title="Déconnecter Spotify">Déconnecter</button>`
+        : "";
+
+      // État C : Connecté mais inactif (HTTP 204)
+      if (spotifyState.status === "idle") {
+        card.innerHTML = `
+          <div class="spotify-idle">
+            <div class="spotify-idle-left">
+              <div class="spotify-icon-badge">${SPOTIFY_SVG}</div>
+              <div class="spotify-idle-texts">
+                <span class="spotify-idle-badge">Spotify connecté</span>
+                <span class="spotify-idle-msg">Aucune lecture en cours</span>
+              </div>
+            </div>
+            ${disconnectHtml}
+          </div>
+        `;
+        document.getElementById("spotify-logout-btn")?.addEventListener("click", disconnectSpotifyAccount);
+        return;
+      }
+
+      // État B : Lecture en cours ou En pause
+      const isPlaying = spotifyState.status === "playing";
+      const statusPillHtml = isPlaying
+        ? `<span class="spotify-status-pill">
+             ${SPOTIFY_SVG}
+             <span class="eq-bars" aria-hidden="true">
+               <span class="eq-bar"></span>
+               <span class="eq-bar"></span>
+               <span class="eq-bar"></span>
+               <span class="eq-bar"></span>
+             </span>
+             <span>En lecture</span>
+           </span>`
+        : `<span class="spotify-status-pill paused">
+             ${SPOTIFY_SVG}
+             <span>En pause</span>
+           </span>`;
+
+      const duration = Math.max(1, spotifyState.durationMs || 1);
+      const progress = Math.min(duration, Math.max(0, spotifyState.progressMs || 0));
+      const pct = Math.min(100, Math.max(0, (progress / duration) * 100));
+      const coverSrc = spotifyState.coverUrl || COVER_FALLBACK_SVG;
+      const subLine = spotifyState.album
+        ? `${spotifyState.artist} — ${spotifyState.album}`
+        : spotifyState.artist;
+
+      card.innerHTML = `
+        <div class="spotify-active">
+          <div class="spotify-cover">
+            <img src="${coverSrc}" alt="Pochette d'album" onerror="this.onerror=null;this.src='${COVER_FALLBACK_SVG}';">
+          </div>
+
+          <div class="spotify-details">
+            <div class="spotify-top-strip">
+              ${statusPillHtml}
+              ${disconnectHtml}
+            </div>
+
+            <div class="spotify-track-block">
+              <div class="spotify-title" title="${escapeHtmlAttr(spotifyState.title)}">${spotifyState.title}</div>
+              <div class="spotify-sub" title="${escapeHtmlAttr(subLine)}">${subLine}</div>
+            </div>
+
+            <div class="spotify-progress-row">
+              <span class="spotify-ts" id="spotify-elapsed">${formatTrackTime(progress)}</span>
+              <div class="spotify-bar-bg">
+                <div class="spotify-bar-fill ${isPlaying ? "" : "paused"}" id="spotify-fill" style="width: ${pct.toFixed(2)}%;"></div>
+              </div>
+              <span class="spotify-ts right">${formatTrackTime(duration)}</span>
+            </div>
+          </div>
+        </div>
+      `;
+
+      document.getElementById("spotify-logout-btn")?.addEventListener("click", disconnectSpotifyAccount);
+    }
+
+    async function pollSpotifyPlayback(isRetry = false) {
+      if (demoMode !== 0) return;
+
+      let token = localStorage.getItem(SPOTIFY_KEYS.accessToken);
+      const expiresAt = Number(localStorage.getItem(SPOTIFY_KEYS.expiresAt) || 0);
+
+      if (!token) {
+        spotifyState.status = "disconnected";
+        renderSpotifyCard();
+        return;
+      }
+
+      if (Date.now() >= expiresAt) {
+        token = await refreshSpotifyToken();
+        if (!token) {
+          spotifyState.status = "disconnected";
+          renderSpotifyCard();
+          return;
+        }
+      }
+
+      try {
+        const res = await fetch("https://api.spotify.com/v1/me/player/currently-playing", {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+
+        if (res.status === 401 && !isRetry) {
+          const freshToken = await refreshSpotifyToken();
+          if (freshToken) return pollSpotifyPlayback(true);
+          spotifyState.status = "disconnected";
+          renderSpotifyCard();
+          return;
+        }
+
+        if (res.status === 204) {
+          spotifyState.status = "idle";
+          renderSpotifyCard();
+          return;
+        }
+
+        if (!res.ok) throw new Error(`Erreur Spotify API (${res.status})`);
+
+        const data = await res.json();
+        if (!data || !data.item) {
+          spotifyState.status = "idle";
+          renderSpotifyCard();
+          return;
+        }
+
+        const item = data.item;
+        const artists = Array.isArray(item.artists)
+          ? item.artists.map(a => a.name).join(", ")
+          : "Artiste inconnu";
+        const images = item.album?.images || [];
+        const coverUrl = images.length > 0 ? images[0].url : "";
+
+        spotifyState = {
+          status: data.is_playing ? "playing" : "paused",
+          title: item.name || "Titre inconnu",
+          artist: artists,
+          album: item.album?.name || "",
+          coverUrl: coverUrl,
+          progressMs: data.progress_ms || 0,
+          durationMs: item.duration_ms || 0,
+          lastTick: Date.now()
+        };
+
+        renderSpotifyCard();
+      } catch (err) {
+        console.error("Erreur lecture Spotify :", err);
+      }
+    }
+
+    // Interpolation fluide de la barre de progression chaque seconde
+    setInterval(() => {
+      if (spotifyState.status !== "playing") return;
+      const now = Date.now();
+      const elapsed = now - spotifyState.lastTick;
+      spotifyState.lastTick = now;
+      spotifyState.progressMs = Math.min(spotifyState.durationMs, spotifyState.progressMs + elapsed);
+
+      const fillEl = document.getElementById("spotify-fill");
+      const elapsedEl = document.getElementById("spotify-elapsed");
+      if (fillEl && spotifyState.durationMs > 0) {
+        const pct = Math.min(100, (spotifyState.progressMs / spotifyState.durationMs) * 100);
+        fillEl.style.width = `${pct.toFixed(2)}%`;
+      }
+      if (elapsedEl) {
+        elapsedEl.textContent = formatTrackTime(spotifyState.progressMs);
+      }
+    }, 1000);
+
+    async function initSpotify() {
+      await processSpotifyOAuthCallback();
+      await pollSpotifyPlayback();
+      setInterval(() => pollSpotifyPlayback(), 5000);
+    }
+
+    initSpotify();
+
+    /* ==========================================================================
+       4. MÉTÉO (OPEN-METEO : ACTUEL, MAX/MIN, HEURE PAR HEURE, LENDEMAIN)
+       ========================================================================== */
+    const WMO_WEATHER = {
+      0:  { label: "Ciel dégagé", icon: "sun" },
+      1:  { label: "Principalement dégagé", icon: "sun-cloud" },
+      2:  { label: "Partiellement nuageux", icon: "sun-cloud" },
+      3:  { label: "Ciel couvert", icon: "cloud" },
+      45: { label: "Brouillard", icon: "fog" },
+      48: { label: "Brouillard givrant", icon: "fog" },
+      51: { label: "Bruine légère", icon: "drizzle" },
+      53: { label: "Bruine modérée", icon: "drizzle" },
+      55: { label: "Bruine dense", icon: "drizzle" },
+      61: { label: "Pluie faible", icon: "rain" },
+      63: { label: "Pluie modérée", icon: "rain" },
+      65: { label: "Pluie forte", icon: "rain" },
+      71: { label: "Chute de neige faible", icon: "snow" },
+      73: { label: "Chute de neige modérée", icon: "snow" },
+      75: { label: "Chute de neige forte", icon: "snow" },
+      80: { label: "Averses de pluie", icon: "rain" },
+      81: { label: "Averses modérées", icon: "rain" },
+      82: { label: "Averses fortes", icon: "rain" },
+      95: { label: "Orage", icon: "storm" },
+      96: { label: "Orage avec grêle", icon: "storm" },
+      99: { label: "Orage violent", icon: "storm" }
+    };
+
+    function getWeatherIconSvg(iconType, isDay = 1) {
+      if (isDay === 0 && iconType === "sun") {
+        return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>`;
+      }
+      if (isDay === 0 && iconType === "sun-cloud") {
+        return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/><path d="M13 22H7a4 4 0 1 1 .8-7.92A5.5 5.5 0 0 1 18.4 15H19a3 3 0 0 1 0 6h-6Z"/></svg>`;
+      }
+      switch (iconType) {
+        case "sun":
+          return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>`;
+        case "sun-cloud":
+          return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="M20 12h2"/><path d="m19.07 4.93-1.41 1.41"/><path d="M15.947 12.65a4 4 0 0 0-5.925-4.128"/><path d="M13 22H7a5 5 0 1 1 4.9-6H13a3 3 0 0 1 0 6Z"/></svg>`;
+        case "fog":
+          return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"/><path d="M16 17H7"/><path d="M17 21H9"/></svg>`;
+        case "drizzle":
+        case "rain":
+          return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"/><path d="M16 14v6"/><path d="M8 14v6"/><path d="M12 16v6"/></svg>`;
+        case "snow":
+          return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"/><path d="M8 15h.01"/><path d="M8 19h.01"/><path d="M12 17h.01"/><path d="M12 21h.01"/><path d="M16 15h.01"/><path d="M16 19h.01"/></svg>`;
+        case "storm":
+          return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M6 16.326A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 .5 8.973"/><path d="m13 12-3 5h4l-3 5"/></svg>`;
+        default:
+          return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/></svg>`;
+      }
+    }
+
+    async function fetchWeather() {
+      try {
+        const url = `https://api.open-meteo.com/v1/forecast?latitude=${CONFIG.lat}&longitude=${CONFIG.lon}&timezone=Europe%2FParis&current=temperature_2m,weather_code,is_day&hourly=temperature_2m,weather_code,is_day&daily=weather_code,temperature_2m_max,temperature_2m_min&forecast_days=2`;
+        const res = await fetch(url);
+        if (!res.ok) throw new Error("Erreur météo HTTP");
+        const data = await res.json();
+
+        // 1. Météo actuelle + Max/Min d'aujourd'hui
+        const currentTemp = Math.round(data.current.temperature_2m);
+        const currentCode = data.current.weather_code;
+        const currentIsDay = data.current.is_day ?? 1;
+        const currentInfo = WMO_WEATHER[currentCode] || { label: "Conditions variables", icon: "cloud" };
+
+        const todayMax = Math.round(data.daily.temperature_2m_max[0]);
+        const todayMin = Math.round(data.daily.temperature_2m_min[0]);
+
+        document.getElementById('weather-city').textContent = CONFIG.city;
+        document.getElementById('weather-desc').textContent = currentInfo.label;
+        document.getElementById('weather-main-icon').innerHTML = getWeatherIconSvg(currentInfo.icon, currentIsDay);
+        document.getElementById('weather-temp').textContent = `${currentTemp}°`;
+        document.getElementById('weather-max').textContent = `${todayMax}°`;
+        document.getElementById('weather-min').textContent = `${todayMin}°`;
+
+        // 2. Créneaux heure par heure aujourd'hui (08h, 11h, 14h, 17h, 20h, 23h)
+        const slots = [8, 11, 14, 17, 20, 23];
+        const nowHour = new Date().getHours();
+        let activeSlot = slots[0];
+        let bestDiff = Math.abs(nowHour - activeSlot);
+        for (const h of slots) {
+          const d = Math.abs(nowHour - h);
+          if (d < bestDiff) {
+            bestDiff = d;
+            activeSlot = h;
+          }
+        }
+
+        const hourlyGrid = document.getElementById('weather-hourly-grid');
+        hourlyGrid.innerHTML = slots.map(h => {
+          const tempVal = data.hourly?.temperature_2m?.[h] !== undefined
+            ? `${Math.round(data.hourly.temperature_2m[h])}°`
+            : "--°";
+          const codeVal = data.hourly?.weather_code?.[h] ?? 3;
+          const isDayVal = data.hourly?.is_day?.[h] ?? (h >= 7 && h <= 19 ? 1 : 0);
+          const info = WMO_WEATHER[codeVal] || { label: "Variable", icon: "cloud" };
+          const isActive = h === activeSlot;
+
+          return `
+            <div class="hourly-slot ${isActive ? "active" : ""}">
+              <span class="hourly-slot-time">${String(h).padStart(2, "0")}h</span>
+              <div class="hourly-slot-icon">${getWeatherIconSvg(info.icon, isDayVal)}</div>
+              <span class="hourly-slot-temp">${tempVal}</span>
+            </div>
+          `;
+        }).join('');
+
+        // 3. Météo du lendemain
+        if (data.daily?.time?.[1]) {
+          const tomorrowDate = new Date(data.daily.time[1] + "T12:00:00");
+          const dayName = tomorrowDate.toLocaleDateString('fr-FR', { weekday: 'long' });
+          const tMin = Math.round(data.daily.temperature_2m_min[1]);
+          const tMax = Math.round(data.daily.temperature_2m_max[1]);
+          const tCode = data.daily.weather_code[1];
+          const tInfo = WMO_WEATHER[tCode] || { label: "Conditions variables", icon: "cloud" };
+
+          document.getElementById('tomorrow-day').textContent = `Demain · ${dayName}`;
+          document.getElementById('tomorrow-desc').textContent = tInfo.label;
+          document.getElementById('tomorrow-icon').innerHTML = getWeatherIconSvg(tInfo.icon, 1);
+          document.getElementById('tomorrow-min').textContent = `Min ${tMin}°`;
+          document.getElementById('tomorrow-max').textContent = `Max ${tMax}°`;
+        }
+      } catch (err) {
+        console.error("Erreur récupération météo :", err);
+      }
+    }
+
+    fetchWeather();
+    setInterval(fetchWeather, 15 * 60 * 1000);
+
+    /* ==========================================================================
+       5. EMPLOI DU TEMPS DU JOUR (LECTEUR .ICS UNISTRA + FALLBACKS CORS)
+       ========================================================================== */
+    function parseIcsTimestamp(raw) {
+      if (!raw) return null;
+      const clean = raw.trim();
+      if (clean.length === 8) {
+        return new Date(
+          parseInt(clean.slice(0, 4), 10),
+          parseInt(clean.slice(4, 6), 10) - 1,
+          parseInt(clean.slice(6, 8), 10),
+          0, 0, 0
+        );
+      }
+      const y = parseInt(clean.slice(0, 4), 10);
+      const m = parseInt(clean.slice(4, 6), 10) - 1;
+      const d = parseInt(clean.slice(6, 8), 10);
+      const hh = parseInt(clean.slice(9, 11), 10) || 0;
+      const mm = parseInt(clean.slice(11, 13), 10) || 0;
+      const ss = parseInt(clean.slice(13, 15), 10) || 0;
+      if (clean.endsWith('Z')) {
+        return new Date(Date.UTC(y, m, d, hh, mm, ss));
+      }
+      return new Date(y, m, d, hh, mm, ss);
+    }
+
+    function cleanIcsField(txt) {
+      if (!txt) return "";
+      return txt
+        .replace(/\\n/gi, ' • ')
+        .replace(/\\,/g, ',')
+        .replace(/\\;/g, ';')
+        .replace(/\\\\/g, '\\')
+        .trim();
+    }
+
+    function formatClassDuration(start, end) {
+      const mins = Math.max(0, Math.round((end - start) / 60000));
+      const h = Math.floor(mins / 60);
+      const m = mins % 60;
+      if (h === 0) return `${m} min`;
+      return m === 0 ? `${h}h00` : `${h}h${String(m).padStart(2, '0')}`;
+    }
+
+    async function fetchIcsWithFallbacks(targetUrl) {
+      const candidates = [
+        targetUrl,
+        `https://corsproxy.io/?${encodeURIComponent(targetUrl)}`,
+        `https://api.allorigins.win/raw?url=${encodeURIComponent(targetUrl)}`,
+        `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(targetUrl)}`
+      ];
+
+      for (const endpoint of candidates) {
+        try {
+          const controller = new AbortController();
+          const timer = setTimeout(() => controller.abort(), 7000);
+          const response = await fetch(endpoint, { cache: "no-store", signal: controller.signal });
+          clearTimeout(timer);
+          if (response.ok) {
+            const text = await response.text();
+            if (text.includes("BEGIN:VCALENDAR")) return text;
+          }
+        } catch (e) {
+          // Essaie le relais suivant
+        }
+      }
+      throw new Error("Impossible de récupérer le calendrier ICS");
+    }
+
+    function renderScheduleList(events) {
+      const listEl = document.getElementById('schedule-list');
+      const countBadge = document.getElementById('schedule-count');
+      const now = new Date();
+
+      const sorted = [...events].sort((a, b) => a.start - b.start);
+
+      if (sorted.length === 0) {
+        countBadge.textContent = "Journée libre";
+        listEl.setAttribute('data-density', 'normal');
+        listEl.innerHTML = `
+          <div class="schedule-empty">
+            <div class="schedule-empty-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+                <rect width="18" height="18" x="3" y="4" rx="2" ry="2"></rect>
+                <line x1="16" x2="16" y1="2" y2="6"></line>
+                <line x1="8" x2="8" y1="2" y2="6"></line>
+                <line x1="3" x2="21" y1="10" y2="10"></line>
+                <path d="m9 16 2 2 4-4"></path>
+              </svg>
+            </div>
+            <div class="schedule-empty-title">Aucun cours prévu aujourd'hui</div>
+            <div class="schedule-empty-desc">
+              Votre emploi du temps est libre pour l'ensemble de la journée.
+            </div>
+          </div>
+        `;
+        return;
+      }
+
+      // Adaptation automatique de la densité verticale pour afficher tous les cours sans troncature
+      if (sorted.length <= 3) {
+        listEl.setAttribute('data-density', 'spacious');
+      } else if (sorted.length <= 5) {
+        listEl.setAttribute('data-density', 'normal');
+      } else if (sorted.length <= 6) {
+        listEl.setAttribute('data-density', 'compact');
+      } else {
+        listEl.setAttribute('data-density', 'ultra');
+      }
+
+      countBadge.textContent = `${sorted.length} ${sorted.length === 1 ? 'cours' : 'cours'}`;
+
+      const nextIndex = sorted.findIndex(ev => ev.start > now);
+
+      listEl.innerHTML = sorted.map((ev, idx) => {
+        const startStr = ev.start.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+        const endStr = ev.end.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+        const durationStr = formatClassDuration(ev.start, ev.end);
+
+        const isOngoing = now >= ev.start && now <= ev.end;
+        const isPast = now > ev.end;
+        const isNext = !isOngoing && !isPast && idx === nextIndex;
+
+        let itemClass = "";
+        let statusHtml = "";
+        let progressHtml = "";
+
+        if (isOngoing) {
+          itemClass = "ongoing";
+          const totalMs = Math.max(1, ev.end - ev.start);
+          const doneMs = Math.max(0, now - ev.start);
+          const pct = Math.min(100, Math.max(0, Math.round((doneMs / totalMs) * 100)));
+          const remMin = Math.max(1, Math.ceil((ev.end - now) / 60000));
+          const remText = remMin >= 60
+            ? `Reste ${Math.floor(remMin / 60)}h${String(remMin % 60).padStart(2, '0')}`
+            : `Reste ${remMin} min`;
+
+          statusHtml = `
+            <span class="status-pill ongoing">En cours</span>
+            <span class="status-sub">${remText}</span>
+          `;
+          progressHtml = `
+            <div class="course-progress-bar">
+              <div class="course-progress-fill" style="width: ${pct}%;"></div>
+            </div>
+          `;
+        } else if (isNext) {
+          itemClass = "next";
+          const waitMin = Math.max(1, Math.round((ev.start - now) / 60000));
+          const waitText = waitMin >= 60
+            ? `Dans ${Math.floor(waitMin / 60)}h${String(waitMin % 60).padStart(2, '0')}`
+            : `Dans ${waitMin} min`;
+
+          statusHtml = `
+            <span class="status-pill next">Suivant</span>
+            <span class="status-sub">${waitText}</span>
+          `;
+        } else if (isPast) {
+          itemClass = "past";
+          statusHtml = `<span class="status-pill past">Terminé</span>`;
+        }
+
+        const roomText = ev.location || "Salle non précisée";
+
+        return `
+          <article class="course-item ${itemClass}">
+            <div class="course-time-col">
+              <div class="course-hours">${startStr} – ${endStr}</div>
+              <div class="course-duration">${durationStr}</div>
+            </div>
+
+            <div class="course-body-col">
+              <div class="course-name" title="${escapeHtmlAttr(ev.title)}">${ev.title}</div>
+              <div class="course-room">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"></path>
+                  <circle cx="12" cy="10" r="3"></circle>
+                </svg>
+                <span>${roomText}</span>
+              </div>
+            </div>
+
+            <div class="course-status-col">
+              ${statusHtml}
+            </div>
+            ${progressHtml}
+          </article>
+        `;
+      }).join('');
+    }
+
+    async function fetchSchedule() {
+      if (demoMode !== 0) return;
+
+      const syncEl = document.getElementById('schedule-sync-status');
+
+      try {
+        const rawIcs = await fetchIcsWithFallbacks(CONFIG.icsUrl);
+        const unfolded = rawIcs.replace(/\r?\n[ \t]/g, '');
+        const vevents = unfolded.split('BEGIN:VEVENT').slice(1);
+
+        const now = new Date();
+        const todayKey = now.toLocaleDateString('fr-CA'); // YYYY-MM-DD local
+        const todayClasses = [];
+
+        for (const block of vevents) {
+          const content = block.split('END:VEVENT')[0];
+          const dtStart = content.match(/DTSTART(?:;[^:]*)?:([^\r\n]+)/);
+          const dtEnd = content.match(/DTEND(?:;[^:]*)?:([^\r\n]+)/);
+          const summary = content.match(/SUMMARY(?:;[^:]*)?:([^\r\n]+)/);
+          const location = content.match(/LOCATION(?:;[^:]*)?:([^\r\n]+)/);
+
+          if (!dtStart) continue;
+          const startDate = parseIcsTimestamp(dtStart[1]);
+          const endDate = dtEnd ? parseIcsTimestamp(dtEnd[1]) : startDate;
+          if (!startDate) continue;
+
+          if (startDate.toLocaleDateString('fr-CA') === todayKey) {
+            todayClasses.push({
+              start: startDate,
+              end: endDate,
+              title: cleanIcsField(summary ? summary[1] : "Cours"),
+              location: cleanIcsField(location ? location[1] : "")
+            });
+          }
+        }
+
+        cachedTodaysEvents = todayClasses;
+        renderScheduleList(cachedTodaysEvents);
+
+        const hhmm = now.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+        syncEl.textContent = `Synchronisé à ${hhmm}`;
+      } catch (err) {
+        console.error("Erreur emploi du temps :", err);
+        syncEl.textContent = "Hors ligne — Nouvelle tentative automatique...";
+        if (cachedTodaysEvents.length === 0) {
+          renderScheduleList([]);
+        }
+      }
+    }
+
+    /* ==========================================================================
+       6. MODE DÉMO DISCRET (TOUCHE 'D' OU CLIC EN BAS À DROITE)
+       ========================================================================== */
+    function buildDemoCourses(mode) {
+      const now = new Date();
+      const base = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      const at = (h, m) => new Date(base.getTime() + h * 3600000 + m * 60000);
+
+      if (mode === 1) {
+        // 3 cours avec un créneau en cours autour de l'heure actuelle
+        const currentH = now.getHours();
+        return [
+          {
+            start: at(Math.max(8, currentH - 3), 0),
+            end: at(Math.max(9, currentH - 1), 30),
+            title: "CM — Architecture des Systèmes Distribués",
+            location: "Amphithéâtre A3 • UFR Math-Info"
+          },
+          {
+            start: at(currentH, 0),
+            end: at(currentH + 1, 30),
+            title: "TD — Algorithmique Avancée & Complexité",
+            location: "Salle C204 • Bâtiment Atrium"
+          },
+          {
+            start: at(Math.min(18, currentH + 2), 0),
+            end: at(Math.min(20, currentH + 3), 30),
+            title: "TP — Réseaux & Protocoles Sécurisés",
+            location: "Salle Info 12 • Institut Le Bel"
+          }
+        ];
+      }
+
+      if (mode === 2) {
+        // Journée chargée à 6 cours
+        return [
+          { start: at(8, 0),  end: at(9, 30),  title: "CM — Bases de Données Relationnelles", location: "Amphi 2 • Atrium" },
+          { start: at(9, 45),  end: at(11, 15), title: "TD — Modélisation Conceptuelle UML", location: "Salle 108 • Patio" },
+          { start: at(11, 30), end: at(12, 30), title: "Anglais Scientifique & Technique", location: "Salle 302 • Pangloss" },
+          { start: at(13, 45), end: at(15, 15), title: "CM — Programmation Fonctionnelle", location: "Amphi C • UFR Math-Info" },
+          { start: at(15, 30), end: at(17, 0),  title: "TP — Développement Web & API REST", location: "Salle Info 04" },
+          { start: at(17, 15), end: at(18, 45), title: "Projet Tutoré — Suivi d'avancement", location: "Salle Projet B12" }
+        ];
+      }
+
+      // Mode 3 : Aucun cours
+      return [];
+    }
+
+    function buildDemoSpotify(mode) {
+      const coverA = "data:image/svg+xml;utf8," + encodeURIComponent(
+        `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160"><defs><linearGradient id="gA" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#0f2942"/><stop offset="100%" stop-color="#08101c"/></linearGradient></defs><rect width="160" height="160" fill="url(#gA)"/><circle cx="80" cy="80" r="52" fill="none" stroke="#38bdf8" stroke-opacity="0.35" stroke-width="2"/><circle cx="80" cy="80" r="30" fill="none" stroke="#1db954" stroke-opacity="0.65" stroke-width="3"/><circle cx="80" cy="80" r="8" fill="#f8fafc"/></svg>`
+      );
+      const coverB = "data:image/svg+xml;utf8," + encodeURIComponent(
+        `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160"><defs><linearGradient id="gB" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#1e293b"/><stop offset="100%" stop-color="#090d16"/></linearGradient></defs><rect width="160" height="160" fill="url(#gB)"/><polygon points="80,28 128,118 32,118" fill="none" stroke="#94a3b8" stroke-opacity="0.5" stroke-width="2.5"/><circle cx="80" cy="88" r="12" fill="#38bdf8" fill-opacity="0.7"/></svg>`
+      );
+
+      if (mode === 1) {
+        return {
+          status: "playing",
+          title: "Veridis Quo",
+          artist: "Daft Punk",
+          album: "Discovery",
+          coverUrl: coverA,
+          progressMs: 142000,
+          durationMs: 345000,
+          lastTick: Date.now()
+        };
+      }
+      if (mode === 2) {
+        return {
+          status: "paused",
+          title: "Time",
+          artist: "Hans Zimmer",
+          album: "Inception",
+          coverUrl: coverB,
+          progressMs: 198000,
+          durationMs: 275000,
+          lastTick: Date.now()
+        };
+      }
+      return {
+        status: "idle",
+        title: "",
+        artist: "",
+        album: "",
+        coverUrl: "",
+        progressMs: 0,
+        durationMs: 0,
+        lastTick: Date.now()
+      };
+    }
+
+    function cycleDemoMode() {
+      demoMode = (demoMode + 1) % 4;
+      const btn = document.getElementById('demo-toggle-btn');
+      const syncEl = document.getElementById('schedule-sync-status');
+
+      if (demoMode === 0) {
+        btn.textContent = "Mode Live (Touche D : Démo)";
+        fetchSchedule();
+        pollSpotifyPlayback();
+      } else if (demoMode === 1) {
+        btn.textContent = "Démo 1/3 : 3 cours + Lecture";
+        syncEl.textContent = "Aperçu démonstration — 3 cours & Spotify en lecture";
+        renderScheduleList(buildDemoCourses(1));
+        spotifyState = buildDemoSpotify(1);
+        renderSpotifyCard();
+      } else if (demoMode === 2) {
+        btn.textContent = "Démo 2/3 : 6 cours + Pause";
+        syncEl.textContent = "Aperçu démonstration — 6 cours & Spotify en pause";
+        renderScheduleList(buildDemoCourses(2));
+        spotifyState = buildDemoSpotify(2);
+        renderSpotifyCard();
+      } else {
+        btn.textContent = "Démo 3/3 : 0 cours + Inactif";
+        syncEl.textContent = "Aperçu démonstration — Journée libre & Spotify inactif";
+        renderScheduleList([]);
+        spotifyState = buildDemoSpotify(3);
+        renderSpotifyCard();
+      }
+    }
+
+    document.getElementById('demo-toggle-btn').addEventListener('click', cycleDemoMode);
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'd' || e.key === 'D') {
+        cycleDemoMode();
+      }
+    });
+
+    // Mise à jour des statuts de cours toutes les 30 secondes
+    setInterval(() => {
+      if (demoMode === 0) {
+        renderScheduleList(cachedTodaysEvents);
+      } else {
+        renderScheduleList(buildDemoCourses(demoMode));
+      }
+    }, 30 * 1000);
+
+    // Lancement initial & synchronisation toutes les 5 minutes
+    fetchSchedule();
+    setInterval(fetchSchedule, 5 * 60 * 1000);
+  </script>
+</body>
+</html>
