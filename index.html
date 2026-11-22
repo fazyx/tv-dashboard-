@@ -1695,10 +1695,6 @@
       icsUrl: "https://monemploidutemps.unistra.fr/api/calendar/1fd1f31b-e0f0-4588-a8dd-0985914d395a/export",
       spotifyClientId: "3e9d3847197b40c4b6af8e21e75db7fe",
       spotifyRefreshToken: "AQBoihdF-lcA5ra6vu6i6Y4fZrzziqX9u1TDcGyRyvagW3zWSLV68brOp1bssbn-cm05lrcwqCOUWckje4FF19_fQ30Kh3euPnTUAjK6qLYsVK6J9WNkDQV14HCRfXufaIs",
-};
-if (CONFIG.spotifyRefreshToken && !localStorage.getItem('tv_dash_spotify_refresh_token')) {
-  localStorage.setItem('tv_dash_spotify_refresh_token', CONFIG.spotifyRefreshToken);
-}
       spotifyScopes: "user-read-currently-playing user-read-playback-state",
       crousRestaurantId: 1394,
       crousName: "Le PEGE",
@@ -1711,7 +1707,10 @@ if (CONFIG.spotifyRefreshToken && !localStorage.getItem('tv_dash_spotify_refresh
       weatherCacheKey: "tv_dash_weather_v3",
       weatherCacheTtlMs: 30 * 60 * 1000    // 30 minutes
     };
-
+     
+    if (CONFIG.spotifyRefreshToken && !localStorage.getItem('tv_dash_spotify_refresh_token')) {
+    localStorage.setItem('tv_dash_spotify_refresh_token', CONFIG.spotifyRefreshToken);
+    }
     const CORS_PROXIES = [
       url => `https://corsproxy.io/?${encodeURIComponent(url)}`,
       url => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
