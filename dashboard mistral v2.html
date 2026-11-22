@@ -1,0 +1,3224 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Smart TV Dashboard Pro</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    /* ==========================================================================
+       1. VARIABLES DE THÈME & RÉINITIALISATION GLOBALE (16:9 SMART TV)
+       ========================================================================== */
+    :root {
+      --bg-base: #07090e;
+      --bg-card: #0f131c;
+      --bg-card-elevated: #151b28;
+      --bg-subtle: rgba(255, 255, 255, 0.03);
+
+      --border-card: rgba(255, 255, 255, 0.08);
+      --border-top: rgba(255, 255, 255, 0.12);
+
+      --text-primary: #f8fafc;
+      --text-secondary: #94a3b8;
+      --text-muted: #64748b;
+
+      --accent-sky: #38bdf8;
+      --accent-sky-soft: rgba(56, 189, 248, 0.13);
+      --accent-emerald: #22c55e;
+      --accent-emerald-soft: rgba(34, 197, 94, 0.14);
+      --accent-amber: #f59e0b;
+      --accent-amber-soft: rgba(245, 158, 11, 0.15);
+      --accent-rose: #f43f5e;
+      --accent-rose-soft: rgba(244, 63, 94, 0.16);
+      --accent-indigo: #818cf8;
+      --accent-indigo-soft: rgba(129, 140, 248, 0.15);
+      --accent-spotify: #1ed760;
+      --accent-spotify-soft: rgba(30, 215, 96, 0.14);
+
+      --radius-lg: 1.8vh;
+      --radius-md: 1.15vh;
+      --radius-sm: 0.75vh;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html, body {
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      background-color: var(--bg-base);
+      color: var(--text-primary);
+      font-family: 'Inter', 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+      font-variant-numeric: tabular-nums;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      user-select: none;
+    }
+
+    /* Fond sombre architectural sobre (#07090e) + grille principale 47% / 53% */
+    body {
+      background-color: var(--bg-base);
+      background-image:
+        radial-gradient(circle at 12% 10%, rgba(56, 189, 248, 0.032) 0%, transparent 42%),
+        radial-gradient(circle at 88% 90%, rgba(34, 197, 94, 0.022) 0%, transparent 44%);
+      display: grid;
+      grid-template-columns: 47% 1fr;
+      grid-template-rows: minmax(0, 1fr);
+      column-gap: 2.2vw;
+      padding: 2.6vh 2.4vw;
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* Trame architecturale ultra-discrète */
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(to right, rgba(255, 255, 255, 0.011) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255, 255, 255, 0.011) 1px, transparent 1px);
+      background-size: 4vw 4vw;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ==========================================================================
+       2. STRUCTURE EN DEUX COLONNES (47% GAUCHE / 53% DROITE)
+       ========================================================================== */
+    /* L'espace libre est absorbé PAR LES CARTES (flex-grow) au lieu de créer
+       de grands vides entre elles : interligne fixe de 2.2vh seulement. */
+    .col-left {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 2.2vh;
+      height: 100%;
+      min-height: 0;
+      min-width: 0;
+    }
+
+    .col-right {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      min-height: 0;
+      min-width: 0;
+    }
+
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-card);
+      border-top-color: var(--border-top);
+      border-radius: var(--radius-lg);
+      box-shadow: 0 1.4vh 3.4vh rgba(0, 0, 0, 0.45);
+      min-height: 0;
+      min-width: 0;
+    }
+
+    /* ==========================================================================
+       3. HAUT-GAUCHE : CARTE HORLOGE (CONTENU CENTRÉ) + SPOTIFY
+       ========================================================================== */
+    .clock-card {
+      flex: 0 0 auto;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 2.5vh 2.2vw;
+    }
+
+    .clock-main {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    /* Taille agrandie de 10 % (16.3vh / 2.48vh), invariable même quand Spotify est actif */
+    #time {
+      font-size: 16.3vh;
+      font-weight: 700;
+      line-height: 0.92;
+      letter-spacing: -0.035em;
+      font-variant-numeric: tabular-nums;
+      color: var(--text-primary);
+    }
+
+    #date {
+      margin-top: 1.0vh;
+      font-size: 2.48vh;
+      font-weight: 500;
+      color: #94a3b8;
+      text-transform: capitalize;
+      letter-spacing: -0.01em;
+      line-height: 1.2;
+    }
+
+    /* Bandeau Spotify intégré (totalement masqué hors lecture) */
+    .spotify-strip {
+      display: none;
+      margin-top: 1.4vh;
+      padding-top: 1.3vh;
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      flex-direction: column;
+      gap: 0.7vh;
+    }
+
+    .spotify-strip.is-visible {
+      display: flex;
+    }
+
+    .sp-player-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.9vw;
+      min-width: 0;
+    }
+
+    .sp-left {
+      display: flex;
+      align-items: center;
+      gap: 0.85vw;
+      min-width: 0;
+      flex: 1;
+    }
+
+    .sp-art {
+      width: 5.0vh;
+      height: 5.0vh;
+      border-radius: var(--radius-sm);
+      background: var(--bg-card-elevated);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      overflow: hidden;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .sp-art img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .sp-meta {
+      display: flex;
+      flex-direction: column;
+      gap: 0.2vh;
+      min-width: 0;
+      flex: 1;
+    }
+
+    .sp-title-wrap {
+      display: flex;
+      align-items: center;
+      gap: 0.42vw;
+      min-width: 0;
+    }
+
+    .sp-logo-svg {
+      width: 1.55vh;
+      height: 1.55vh;
+      color: var(--accent-spotify);
+      flex-shrink: 0;
+    }
+
+    .sp-title {
+      font-size: 1.65vh;
+      font-weight: 700;
+      color: var(--text-primary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .sp-artist {
+      font-size: 1.35vh;
+      font-weight: 500;
+      color: var(--text-secondary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .sp-right {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 0.3vh;
+      flex-shrink: 0;
+    }
+
+    .sp-status-row {
+      display: flex;
+      align-items: center;
+      gap: 0.45vw;
+    }
+
+    .sp-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35vw;
+      padding: 0.22vh 0.58vw;
+      border-radius: 999px;
+      background: var(--accent-spotify-soft);
+      border: 1px solid rgba(30, 215, 96, 0.3);
+      font-size: 1.1vh;
+      font-weight: 600;
+      color: var(--accent-spotify);
+    }
+
+    .sp-badge.paused {
+      background: rgba(148, 163, 184, 0.14);
+      border-color: rgba(148, 163, 184, 0.28);
+      color: var(--text-secondary);
+    }
+
+    .sp-eq {
+      display: inline-flex;
+      align-items: flex-end;
+      gap: 2px;
+      height: 0.95vh;
+    }
+
+    .sp-eq span {
+      width: 2px;
+      background: var(--accent-spotify);
+      border-radius: 1px;
+      animation: eqBounce 0.9s ease-in-out infinite;
+    }
+
+    .sp-eq span:nth-child(1) { height: 45%; animation-delay: 0s; }
+    .sp-eq span:nth-child(2) { height: 100%; animation-delay: 0.2s; }
+    .sp-eq span:nth-child(3) { height: 65%; animation-delay: 0.4s; }
+
+    @keyframes eqBounce {
+      0%, 100% { transform: scaleY(0.35); }
+      50% { transform: scaleY(1); }
+    }
+
+    .sp-disconnect-hover {
+      opacity: 0;
+      pointer-events: none;
+      background: rgba(244, 63, 94, 0.12);
+      border: 1px solid rgba(244, 63, 94, 0.32);
+      color: #fda4af;
+      border-radius: 999px;
+      padding: 0.18vh 0.5vw;
+      font-family: inherit;
+      font-size: 1.02vh;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.2s ease, background 0.18s ease;
+    }
+
+    .spotify-strip:hover .sp-disconnect-hover {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .sp-disconnect-hover:hover {
+      background: rgba(244, 63, 94, 0.24);
+    }
+
+    .sp-time {
+      font-size: 1.12vh;
+      font-weight: 500;
+      color: var(--text-muted);
+    }
+
+    .sp-progress-track {
+      width: 100%;
+      height: 0.3vh;
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 999px;
+      overflow: hidden;
+    }
+
+    .sp-progress-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, var(--accent-spotify), var(--accent-sky));
+      transition: width 0.95s linear;
+    }
+
+    /* ==========================================================================
+       4. MILIEU-GAUCHE : CARTE MÉTÉO (FLEX RÉDUIT : CÈDE LA PLACE À L'HORLOGE)
+       ========================================================================== */
+    .weather-card {
+      flex: 0.95 1 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 1.35vh;
+      padding: 2.1vh 2.1vw;
+    }
+
+    .weather-top {
+      flex: 0 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1vw;
+    }
+
+    .weather-left {
+      display: flex;
+      flex-direction: column;
+      gap: 0.65vh;
+      min-width: 0;
+    }
+
+    .city-name {
+      font-size: 2.2vh;
+      font-weight: 600;
+      color: #94a3b8;
+      letter-spacing: -0.01em;
+      line-height: 1.1;
+    }
+
+    .weather-desc-row {
+      display: flex;
+      align-items: center;
+      gap: 0.65vw;
+      min-width: 0;
+    }
+
+    .weather-main-icon {
+      width: 3.1vh;
+      height: 3.1vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .weather-main-icon svg {
+      width: 100%;
+      height: 100%;
+    }
+
+    .weather-desc {
+      font-size: 2.0vh;
+      font-weight: 500;
+      color: #e2e8f0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      line-height: 1.15;
+    }
+
+    .weather-temps-right {
+      display: flex;
+      align-items: center;
+      gap: 1.15vw;
+      flex-shrink: 0;
+    }
+
+    .temp-current {
+      font-size: 8.8vh;
+      font-weight: 700;
+      line-height: 0.95;
+      letter-spacing: -0.04em;
+      color: var(--text-primary);
+    }
+
+    .temp-minmax-col {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 0.65vh;
+      padding-left: 1.05vw;
+      border-left: 1px solid var(--border-card);
+    }
+
+    .minmax-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5vw;
+    }
+
+    .minmax-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.22vw;
+      font-size: 1.28vh;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+    }
+
+    .minmax-label svg {
+      width: 1.45vh;
+      height: 1.45vh;
+    }
+
+    .minmax-val {
+      font-size: 2.75vh;
+      font-weight: 700;
+      line-height: 1;
+    }
+
+    .minmax-val.max { color: #fbbf24; }
+    .minmax-val.min { color: var(--accent-sky); }
+
+    /* Évolution sur 12 heures : la section et sa grille s'étirent verticalement
+       pour consommer l'espace libre (boîtes horaires plus hautes, jamais vides) */
+    .hourly-section {
+      flex: 1 1 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 0.85vh;
+      padding-top: 1.15vh;
+      border-top: 1px solid var(--border-card);
+      min-height: 0;
+    }
+
+    .hourly-header {
+      flex: 0 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .section-subtitle {
+      font-size: 1.22vh;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+    }
+
+    .hourly-window-tag {
+      font-size: 1.25vh;
+      font-weight: 600;
+      color: var(--text-secondary);
+    }
+
+    .hourly-grid {
+      flex: 1 1 auto;
+      min-height: 0;
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 0.7vw;
+    }
+
+    .hourly-slot {
+      background: var(--bg-card-elevated);
+      border: 1px solid var(--border-card);
+      border-radius: var(--radius-md);
+      padding: 1.05vh 0.35vw;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 0.7vh;
+    }
+
+    .hourly-slot.first {
+      background: rgba(56, 189, 248, 0.11);
+      border-color: rgba(56, 189, 248, 0.34);
+    }
+
+    .hourly-hour {
+      font-size: 1.6vh;
+      font-weight: 600;
+      color: var(--text-secondary);
+      line-height: 1;
+    }
+
+    .hourly-slot.first .hourly-hour {
+      color: var(--accent-sky);
+      font-weight: 700;
+    }
+
+    .hourly-icon {
+      width: 2.9vh;
+      height: 2.9vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .hourly-icon svg {
+      width: 100%;
+      height: 100%;
+    }
+
+    .hourly-temp {
+      font-size: 2.0vh;
+      font-weight: 700;
+      color: var(--text-primary);
+      line-height: 1;
+    }
+
+    /* Prévision du lendemain compacte */
+    .tomorrow-row {
+      flex: 0 0 auto;
+      padding: 1.0vh 1.2vw;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--border-card);
+      border-radius: 1.1vh;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1vw;
+    }
+
+    .tomorrow-left {
+      display: flex;
+      align-items: center;
+      gap: 0.85vw;
+      min-width: 0;
+    }
+
+    .tomorrow-icon {
+      width: 2.9vh;
+      height: 2.9vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .tomorrow-icon svg {
+      width: 100%;
+      height: 100%;
+    }
+
+    .tomorrow-text {
+      display: flex;
+      align-items: baseline;
+      gap: 0.65vw;
+      min-width: 0;
+    }
+
+    .tomorrow-title {
+      font-size: 1.5vh;
+      font-weight: 700;
+      color: var(--accent-sky);
+      white-space: nowrap;
+      text-transform: capitalize;
+    }
+
+    .tomorrow-desc {
+      font-size: 1.65vh;
+      font-weight: 500;
+      color: #e2e8f0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .tomorrow-temps {
+      display: flex;
+      align-items: center;
+      gap: 0.45vw;
+      font-size: 2.05vh;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+
+    .tomorrow-temps .min { color: var(--accent-sky); }
+    .tomorrow-temps .sep { color: var(--text-muted); }
+    .tomorrow-temps .max { color: #fbbf24; }
+
+    /* ==========================================================================
+       5. BAS-GAUCHE : MENU CROUS • LE PEGE (S'ÉTEND AUSSI, CONTENU CENTRÉ)
+       ========================================================================== */
+    .crous-card {
+      flex: 0.85 1 auto;
+      padding: 1.7vh 2.1vw;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-evenly;
+      gap: 1.0vh;
+    }
+
+    .crous-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.7vw;
+      padding-bottom: 0.75vh;
+      border-bottom: 1px solid var(--border-card);
+      flex-shrink: 0;
+    }
+
+    .crous-title-wrap {
+      display: flex;
+      align-items: center;
+      gap: 0.58vw;
+      min-width: 0;
+    }
+
+    .crous-icon-box {
+      width: 2.6vh;
+      height: 2.6vh;
+      border-radius: var(--radius-sm);
+      background: var(--accent-emerald-soft);
+      border: 1px solid rgba(34, 197, 94, 0.3);
+      color: #4ade80;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .crous-icon-box svg {
+      width: 1.55vh;
+      height: 1.55vh;
+    }
+
+    .crous-title {
+      font-size: 1.72vh;
+      font-weight: 700;
+      color: var(--text-primary);
+      letter-spacing: -0.015em;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .crous-header-right {
+      display: flex;
+      align-items: center;
+      gap: 0.5vw;
+      flex-shrink: 0;
+    }
+
+    .crous-sync-dot {
+      width: 0.62vh;
+      height: 0.62vh;
+      border-radius: 50%;
+      background: var(--accent-sky);
+      opacity: 0;
+      transition: opacity 0.25s ease;
+    }
+
+    .crous-sync-dot.syncing {
+      opacity: 0.9;
+      animation: subtlePulse 1.1s ease-in-out infinite;
+    }
+
+    @keyframes subtlePulse {
+      0%, 100% { opacity: 0.25; transform: scale(0.85); }
+      50% { opacity: 1; transform: scale(1.1); }
+    }
+
+    .crous-day-badge {
+      font-size: 1.15vh;
+      font-weight: 600;
+      color: var(--text-secondary);
+      background: var(--bg-subtle);
+      border: 1px solid var(--border-card);
+      padding: 0.24vh 0.62vw;
+      border-radius: 999px;
+      white-space: nowrap;
+    }
+
+    .crous-day-badge.is-tomorrow {
+      background: var(--accent-indigo-soft);
+      border-color: rgba(129, 140, 248, 0.35);
+      color: #c7d2fe;
+    }
+
+    .crous-grid {
+      flex: 1 1 auto;
+      min-height: 0;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1vw;
+      align-items: stretch;
+    }
+
+    .crous-pole-card {
+      background: var(--bg-card-elevated);
+      border: 1px solid var(--border-card);
+      border-top: 2px solid var(--accent-sky);
+      border-radius: var(--radius-md);
+      padding: 1.1vh 1.0vw;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 0.6vh;
+      min-width: 0;
+    }
+
+    .crous-pole-card.vege {
+      border-top-color: var(--accent-emerald);
+    }
+
+    .crous-pole-header {
+      display: flex;
+      align-items: center;
+      gap: 0.42vw;
+      flex-shrink: 0;
+    }
+
+    .crous-pole-dot {
+      width: 0.55vh;
+      height: 0.55vh;
+      border-radius: 50%;
+      background: var(--accent-sky);
+      flex-shrink: 0;
+    }
+
+    .crous-pole-card.vege .crous-pole-dot {
+      background: var(--accent-emerald);
+    }
+
+    .crous-pole-title {
+      font-size: 1.15vh;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      color: var(--text-secondary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .crous-dish-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 0.38vh;
+    }
+
+    .crous-dish-item {
+      font-size: 1.4vh;
+      font-weight: 500;
+      color: var(--text-primary);
+      line-height: 1.24;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      padding-left: 0.65vw;
+      position: relative;
+    }
+
+    .crous-dish-item::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 0.68vh;
+      width: 0.3vh;
+      height: 0.3vh;
+      border-radius: 50%;
+      background: var(--text-muted);
+    }
+
+    .crous-dish-item.muted {
+      color: var(--text-muted);
+      font-style: italic;
+    }
+
+    /* État fermé ultra-compact sur une seule ligne */
+    .crous-empty {
+      grid-column: 1 / -1;
+      align-self: center;
+      width: 100%;
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px dashed rgba(255, 255, 255, 0.1);
+      border-radius: var(--radius-md);
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      justify-content: center;
+      gap: 0.55vw;
+      padding: 1.1vh 1vw;
+      color: var(--text-secondary);
+      font-size: 1.38vh;
+      font-weight: 500;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .crous-empty svg {
+      width: 1.75vh;
+      height: 1.75vh;
+      color: var(--text-muted);
+      flex-shrink: 0;
+    }
+
+    /* ==========================================================================
+       6. COLONNE DROITE (53% / 100% HAUTEUR) : EMPLOI DU TEMPS EXCLUSIVEMENT
+       ========================================================================== */
+    .schedule-card {
+      flex: 1;
+      height: 100%;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 1.6vh;
+      padding: 2.3vh 2.2vw;
+    }
+
+    .schedule-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 1vw;
+      padding-bottom: 1.45vh;
+      border-bottom: 1px solid var(--border-card);
+      flex-shrink: 0;
+    }
+
+    .schedule-header-left {
+      display: flex;
+      flex-direction: column;
+      gap: 0.6vh;
+      min-width: 0;
+    }
+
+    .schedule-title {
+      display: flex;
+      align-items: center;
+      gap: 0.68vw;
+      font-size: 2.65vh;
+      font-weight: 700;
+      color: var(--text-primary);
+      letter-spacing: -0.02em;
+      line-height: 1.1;
+    }
+
+    .schedule-title svg {
+      width: 2.85vh;
+      height: 2.85vh;
+      color: var(--accent-sky);
+      flex-shrink: 0;
+    }
+
+    .day-target-label {
+      font-size: 1.68vh;
+      font-weight: 500;
+      color: var(--text-secondary);
+      text-transform: capitalize;
+      cursor: pointer;
+      transition: color 0.18s ease;
+    }
+
+    .day-target-label:hover {
+      color: var(--text-primary);
+    }
+
+    .schedule-header-right {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 0.65vh;
+      flex-shrink: 0;
+      max-width: 26vw;
+    }
+
+    .tomorrow-pill {
+      display: none;
+      align-items: center;
+      gap: 0.4vw;
+      padding: 0.42vh 0.85vw;
+      border-radius: 999px;
+      font-size: 1.28vh;
+      font-weight: 600;
+      background: var(--accent-indigo-soft);
+      border: 1px solid rgba(129, 140, 248, 0.36);
+      color: #c7d2fe;
+      cursor: pointer;
+      transition: background 0.18s ease;
+      white-space: nowrap;
+    }
+
+    .tomorrow-pill:hover {
+      background: rgba(129, 140, 248, 0.26);
+    }
+
+    .tomorrow-pill svg {
+      width: 1.4vh;
+      height: 1.4vh;
+    }
+
+    /* Badge Compte à rebours des examens (totalement masqué si aucun examen) */
+    .exam-countdown-badge {
+      display: none;
+      align-items: center;
+      gap: 0.48vw;
+      padding: 0.5vh 0.88vw;
+      border-radius: 999px;
+      font-size: 1.32vh;
+      font-weight: 600;
+      background: var(--accent-amber-soft);
+      border: 1px solid rgba(245, 158, 11, 0.38);
+      color: #fcd34d;
+      max-width: 100%;
+    }
+
+    .exam-countdown-badge.urgent {
+      background: var(--accent-rose-soft);
+      border-color: rgba(244, 63, 94, 0.45);
+      color: #fda4af;
+    }
+
+    .exam-countdown-badge svg {
+      width: 1.5vh;
+      height: 1.5vh;
+      flex-shrink: 0;
+    }
+
+    .exam-badge-text {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* Conteneur de cours pleine hauteur avec densité adaptative */
+    #schedule-container {
+      flex: 1;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 1.25vh;
+      overflow: hidden;
+    }
+
+    .event-card {
+      flex: 1;
+      min-height: 0;
+      background: var(--bg-card-elevated);
+      border: 1px solid var(--border-card);
+      border-left: 0.36vw solid var(--accent-sky);
+      border-radius: var(--radius-md);
+      padding: 1.5vh 1.35vw;
+      display: grid;
+      grid-template-columns: 7.2vw 1fr;
+      align-items: center;
+      gap: 1.2vw;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Densité normal (<= 4 cours) */
+    #schedule-container[data-density="normal"] .event-card {
+      flex: 0 1 16.5vh;
+    }
+
+    /* Densité compact (5 à 6 cours) */
+    #schedule-container[data-density="compact"] {
+      gap: 1.0vh;
+    }
+    #schedule-container[data-density="compact"] .event-card {
+      padding: 1.1vh 1.2vw;
+    }
+    #schedule-container[data-density="compact"] .event-title {
+      font-size: 1.85vh;
+      -webkit-line-clamp: 1;
+    }
+    #schedule-container[data-density="compact"] .time-start {
+      font-size: 1.85vh;
+    }
+
+    /* Densité grille 2 colonnes (>= 7 cours) */
+    #schedule-container[data-density="grid-2"] {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      grid-auto-rows: minmax(0, 1fr);
+      gap: 1.0vh 0.9vw;
+    }
+    #schedule-container[data-density="grid-2"] .event-card {
+      grid-template-columns: 5.4vw 1fr;
+      gap: 0.78vw;
+      padding: 0.95vh 0.95vw;
+    }
+    #schedule-container[data-density="grid-2"] .event-time-col {
+      padding-right: 0.65vw;
+    }
+    #schedule-container[data-density="grid-2"] .event-title {
+      font-size: 1.62vh;
+      -webkit-line-clamp: 2;
+    }
+    #schedule-container[data-density="grid-2"] .time-start {
+      font-size: 1.62vh;
+    }
+    #schedule-container[data-density="grid-2"] .time-end,
+    #schedule-container[data-density="grid-2"] .event-location {
+      font-size: 1.28vh;
+    }
+    #schedule-container[data-density="grid-2"] .event-pill {
+      font-size: 1.04vh;
+      padding: 0.22vh 0.45vw;
+    }
+
+    /* États des cartes de cours */
+    .event-card.ongoing {
+      background: linear-gradient(90deg, rgba(34, 197, 94, 0.14) 0%, #151b28 100%);
+      border-color: rgba(34, 197, 94, 0.36);
+      border-left-color: var(--accent-emerald);
+    }
+
+    .event-card.exam-event {
+      background: linear-gradient(90deg, rgba(245, 158, 11, 0.13) 0%, #151b28 100%);
+      border-color: rgba(245, 158, 11, 0.34);
+      border-left-color: var(--accent-amber);
+    }
+
+    .event-card.past {
+      opacity: 0.42;
+      border-left-color: var(--text-muted);
+      background: rgba(16, 21, 32, 0.55);
+    }
+
+    .event-time-col {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 0.25vh;
+      padding-right: 0.9vw;
+      border-right: 1px solid var(--border-card);
+    }
+
+    .time-start {
+      font-size: 2.05vh;
+      font-weight: 700;
+      color: var(--text-primary);
+      line-height: 1.1;
+    }
+
+    .event-card.ongoing .time-start { color: #4ade80; }
+    .event-card.exam-event .time-start { color: #fbbf24; }
+
+    .time-end {
+      font-size: 1.48vh;
+      font-weight: 500;
+      color: var(--text-muted);
+      line-height: 1.1;
+    }
+
+    .event-details-col {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 0.45vh;
+      min-width: 0;
+    }
+
+    .event-top-line {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.7vw;
+    }
+
+    .event-title {
+      font-size: 2.02vh;
+      font-weight: 600;
+      color: var(--text-primary);
+      line-height: 1.24;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .event-pill {
+      flex-shrink: 0;
+      font-size: 1.14vh;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      padding: 0.28vh 0.6vw;
+      border-radius: 999px;
+      background: var(--bg-subtle);
+      color: var(--text-secondary);
+      border: 1px solid var(--border-card);
+    }
+
+    .event-pill.live {
+      background: var(--accent-emerald-soft);
+      color: #4ade80;
+      border-color: rgba(34, 197, 94, 0.36);
+    }
+
+    .event-pill.exam {
+      background: var(--accent-amber-soft);
+      color: #fcd34d;
+      border-color: rgba(245, 158, 11, 0.42);
+    }
+
+    .event-location {
+      display: flex;
+      align-items: center;
+      gap: 0.4vw;
+      font-size: 1.48vh;
+      font-weight: 500;
+      color: var(--text-secondary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .event-location svg {
+      width: 1.55vh;
+      height: 1.55vh;
+      color: var(--accent-sky);
+      flex-shrink: 0;
+    }
+
+    .event-card.ongoing .event-location svg { color: var(--accent-emerald); }
+    .event-card.exam-event .event-location svg { color: var(--accent-amber); }
+
+    /* État vide centré et soigné */
+    .empty-schedule {
+      flex: 1;
+      grid-column: 1 / -1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 3vh 2.5vw;
+      border-radius: var(--radius-md);
+      background: rgba(255, 255, 255, 0.018);
+      border: 1px dashed rgba(255, 255, 255, 0.1);
+      gap: 1.35vh;
+    }
+
+    .empty-icon {
+      width: 6.4vh;
+      height: 6.4vh;
+      border-radius: 50%;
+      background: var(--accent-sky-soft);
+      border: 1px solid rgba(56, 189, 248, 0.25);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--accent-sky);
+    }
+
+    .empty-icon svg {
+      width: 3vh;
+      height: 3vh;
+    }
+
+    .empty-title {
+      font-size: 2.2vh;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .empty-sub {
+      font-size: 1.55vh;
+      color: var(--text-secondary);
+      max-width: 30vw;
+      line-height: 1.45;
+    }
+
+    /* ==========================================================================
+       7. MODALE DISCRÈTE DE CONFIGURATION SPOTIFY (OAUTH 2.0 PKCE)
+       ========================================================================== */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 100;
+      background: rgba(5, 7, 11, 0.78);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 3vh 3vw;
+    }
+
+    .modal-backdrop.open {
+      display: flex;
+    }
+
+    .modal-card {
+      width: min(44vw, 680px);
+      background: var(--bg-card);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-top-color: rgba(255, 255, 255, 0.2);
+      border-radius: var(--radius-lg);
+      padding: 2.6vh 2.4vw;
+      box-shadow: 0 2.5vh 6vh rgba(0, 0, 0, 0.65);
+      display: flex;
+      flex-direction: column;
+      gap: 1.8vh;
+    }
+
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1vw;
+      padding-bottom: 1.3vh;
+      border-bottom: 1px solid var(--border-card);
+    }
+
+    .modal-title-wrap {
+      display: flex;
+      align-items: center;
+      gap: 0.7vw;
+    }
+
+    .modal-title-wrap svg {
+      width: 2.4vh;
+      height: 2.4vh;
+      color: var(--accent-spotify);
+    }
+
+    .modal-title {
+      font-size: 2.1vh;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .modal-close-btn {
+      background: var(--bg-subtle);
+      border: 1px solid var(--border-card);
+      color: var(--text-secondary);
+      width: 3.4vh;
+      height: 3.4vh;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.18s ease;
+    }
+
+    .modal-close-btn svg {
+      width: 1.8vh;
+      height: 1.8vh;
+    }
+
+    .modal-close-btn:hover {
+      background: rgba(255, 255, 255, 0.1);
+      color: var(--text-primary);
+    }
+
+    .modal-desc {
+      font-size: 1.5vh;
+      color: var(--text-secondary);
+      line-height: 1.5;
+    }
+
+    .modal-uri-box {
+      background: var(--bg-base);
+      border: 1px solid var(--border-card);
+      border-radius: var(--radius-md);
+      padding: 1.2vh 1.2vw;
+      display: flex;
+      flex-direction: column;
+      gap: 0.45vh;
+    }
+
+    .modal-uri-label {
+      font-size: 1.15vh;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+    }
+
+    .modal-uri-value {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 1.4vh;
+      color: var(--accent-sky);
+      word-break: break-all;
+      user-select: text;
+    }
+
+    .modal-status-line {
+      font-size: 1.38vh;
+      font-weight: 600;
+      color: var(--text-secondary);
+      display: flex;
+      align-items: center;
+      gap: 0.5vw;
+    }
+
+    .modal-status-dot {
+      width: 0.8vh;
+      height: 0.8vh;
+      border-radius: 50%;
+      background: var(--text-muted);
+    }
+
+    .modal-status-dot.connected {
+      background: var(--accent-spotify);
+    }
+
+    .modal-actions {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 0.7vw;
+      padding-top: 0.6vh;
+      flex-wrap: wrap;
+    }
+
+    .sp-btn {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border-card);
+      color: var(--text-secondary);
+      font-family: inherit;
+      font-size: 1.38vh;
+      font-weight: 600;
+      padding: 0.85vh 1.15vw;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      transition: all 0.18s ease;
+      white-space: nowrap;
+    }
+
+    .sp-btn:hover {
+      background: rgba(255, 255, 255, 0.11);
+      color: var(--text-primary);
+    }
+
+    .sp-btn.primary {
+      background: var(--accent-spotify);
+      border-color: var(--accent-spotify);
+      color: #05070b;
+    }
+
+    .sp-btn.primary:hover {
+      filter: brightness(1.08);
+    }
+
+    .sp-btn.danger {
+      color: #fda4af;
+      border-color: rgba(244, 63, 94, 0.35);
+      margin-right: auto;
+    }
+
+    .sp-btn.danger:hover {
+      background: rgba(244, 63, 94, 0.16);
+    }
+
+    /* ==========================================================================
+       8. BARRE D'OUTILS DISCRÈTE EN BAS À DROITE
+       ========================================================================== */
+    .utility-bar {
+      position: fixed;
+      right: 2.4vw;
+      bottom: 0.35vh;
+      z-index: 50;
+      display: flex;
+      align-items: center;
+      gap: 0.45vw;
+      opacity: 0.14;
+      transition: opacity 0.22s ease;
+    }
+
+    .utility-bar:hover,
+    .utility-bar:focus-within {
+      opacity: 1;
+    }
+
+    .utility-btn {
+      background: rgba(15, 19, 28, 0.92);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      color: var(--text-secondary);
+      font-family: inherit;
+      font-size: 1.12vh;
+      font-weight: 600;
+      padding: 0.28vh 0.65vw;
+      border-radius: 0.6vh;
+      cursor: pointer;
+      transition: all 0.18s ease;
+    }
+
+    .utility-btn:hover {
+      background: #1b2538;
+      border-color: rgba(255, 255, 255, 0.24);
+      color: var(--text-primary);
+    }
+
+    .utility-btn.active {
+      border-color: rgba(56, 189, 248, 0.45);
+      color: var(--accent-sky);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ========================================================================
+       COLONNE GAUCHE (47%) : 3 CARTES QUI SE PARTAGENT TOUTE LA HAUTEUR
+       ======================================================================== -->
+  <div class="col-left">
+
+    <!-- 1) HAUT-GAUCHE : HORLOGE (POLICE INVARIABLE 14.8VH) + SPOTIFY INTÉGRÉ -->
+    <section class="card clock-card" id="clock-card">
+      <div class="clock-main">
+        <div id="time">--:--</div>
+        <div id="date">Chargement...</div>
+      </div>
+
+      <!-- Bandeau Spotify intégré : masqué (display: none) hors lecture -->
+      <div class="spotify-strip" id="spotify-widget">
+        <div class="sp-player-row">
+          <div class="sp-left">
+            <div class="sp-art" id="sp-art"></div>
+            <div class="sp-meta">
+              <div class="sp-title-wrap">
+                <svg class="sp-logo-svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                  <path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm4.586 14.424c-.18.295-.563.387-.857.207-2.35-1.434-5.305-1.76-8.786-.963-.335.077-.67-.133-.746-.468-.077-.335.132-.67.468-.746 3.809-.87 7.076-.496 9.713 1.115.293.18.386.563.208.855zm1.223-2.723c-.226.367-.706.482-1.072.257-2.687-1.652-6.785-2.131-9.965-1.166-.413.125-.848-.108-.973-.52-.125-.413.108-.848.52-.973 3.632-1.102 8.147-.568 11.234 1.328.366.226.48.707.256 1.074zm.105-2.835C14.692 8.95 9.375 8.775 6.297 9.71c-.493.15-1.016-.128-1.166-.62-.149-.493.129-1.016.621-1.166 3.532-1.073 9.404-.865 13.115 1.338.445.264.59.838.327 1.282-.264.444-.838.59-1.28.322z"/>
+                </svg>
+                <span class="sp-title" id="sp-title">—</span>
+              </div>
+              <span class="sp-artist" id="sp-artist">—</span>
+            </div>
+          </div>
+
+          <div class="sp-right">
+            <div class="sp-status-row">
+              <button class="sp-disconnect-hover" id="sp-hover-logout-btn" title="Déconnecter Spotify">Déconnecter</button>
+              <div class="sp-badge" id="sp-status-badge">
+                <div class="sp-eq" id="sp-eq"><span></span><span></span><span></span></div>
+                <span id="sp-status-label">Lecture</span>
+              </div>
+            </div>
+            <span class="sp-time" id="sp-time">0:00 / 0:00</span>
+          </div>
+        </div>
+        <div class="sp-progress-track">
+          <div class="sp-progress-fill" id="sp-progress"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2) MILIEU-GAUCHE : MÉTÉO STRASBOURG (FLEX 1.15 : ABSORBE LE SURPLUS) -->
+    <section class="card weather-card">
+      <div class="weather-top">
+        <div class="weather-left">
+          <div class="city-name" id="city">Strasbourg</div>
+          <div class="weather-desc-row">
+            <div class="weather-main-icon" id="weather-main-icon"></div>
+            <div class="weather-desc" id="weather-desc">Synchronisation...</div>
+          </div>
+        </div>
+
+        <div class="weather-temps-right">
+          <div class="temp-current" id="temp-current">--°C</div>
+          <div class="temp-minmax-col">
+            <div class="minmax-row">
+              <span class="minmax-label">
+                <svg viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="m18 15-6-6-6 6"/></svg>
+                Max
+              </span>
+              <span class="minmax-val max" id="temp-max">--°</span>
+            </div>
+            <div class="minmax-row">
+              <span class="minmax-label">
+                <svg viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+                Min
+              </span>
+              <span class="minmax-val min" id="temp-min">--°</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Évolution sur 12 heures : 6 boîtes extensibles espacées de 2h -->
+      <div class="hourly-section">
+        <div class="hourly-header">
+          <span class="section-subtitle">Prochaines 12 heures</span>
+          <span class="hourly-window-tag" id="hourly-window-label">--h → --h</span>
+        </div>
+        <div class="hourly-grid" id="hourly-grid"></div>
+      </div>
+
+      <!-- Prévision du lendemain compacte -->
+      <div class="tomorrow-row">
+        <div class="tomorrow-left">
+          <div class="tomorrow-icon" id="tomorrow-icon"></div>
+          <div class="tomorrow-text">
+            <span class="tomorrow-title" id="tomorrow-title">Demain</span>
+            <span class="tomorrow-desc" id="tomorrow-desc">Chargement...</span>
+          </div>
+        </div>
+        <div class="tomorrow-temps">
+          <span class="min" id="tomorrow-min">Min --°</span>
+          <span class="sep">/</span>
+          <span class="max" id="tomorrow-max">Max --°</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3) BAS-GAUCHE : MENU CROUS • LE PEGE (FLEX 0.85 : ABSORBE LE RESTE) -->
+    <section class="card crous-card">
+      <div class="crous-header">
+        <div class="crous-title-wrap">
+          <div class="crous-icon-box">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"></path>
+              <path d="M7 2v20"></path>
+              <path d="M21 15V2v0a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7"></path>
+            </svg>
+          </div>
+          <h2 class="crous-title">Menu CROUS • Le PEGE</h2>
+        </div>
+        <div class="crous-header-right">
+          <span class="crous-sync-dot" id="crous-sync-dot" title="Actualisation en arrière-plan"></span>
+          <span class="crous-day-badge" id="crous-day-badge">Aujourd'hui</span>
+        </div>
+      </div>
+
+      <div class="crous-grid" id="crous-container">
+        <div class="crous-empty">Chargement du menu Le PEGE...</div>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- ========================================================================
+       COLONNE DROITE (53% / 100% HAUTEUR) : EMPLOI DU TEMPS EXCLUSIVEMENT
+       ======================================================================== -->
+  <div class="col-right">
+    <section class="card schedule-card">
+      <header class="schedule-header">
+        <div class="schedule-header-left">
+          <h1 class="schedule-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect width="18" height="18" x="3" y="4" rx="2" ry="2"></rect>
+              <line x1="16" x2="16" y1="2" y2="6"></line>
+              <line x1="8" x2="8" y1="2" y2="6"></line>
+              <line x1="3" x2="21" y1="10" y2="10"></line>
+              <path d="M8 14h.01"></path>
+              <path d="M12 14h.01"></path>
+              <path d="M16 14h.01"></path>
+              <path d="M8 18h.01"></path>
+              <path d="M12 18h.01"></path>
+              <path d="M16 18h.01"></path>
+            </svg>
+            <span>Emploi du temps</span>
+          </h1>
+          <span class="day-target-label" id="schedule-day-label" title="Cliquer ou appuyer sur T pour basculer Aujourd'hui / Demain">Chargement...</span>
+        </div>
+
+        <div class="schedule-header-right">
+          <span class="tomorrow-pill" id="tomorrow-pill" title="Cliquer ou appuyer sur T pour revenir à aujourd'hui">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M5 12h14"></path>
+              <path d="m12 5 7 7-7 7"></path>
+            </svg>
+            <span>Journée de demain</span>
+          </span>
+
+          <!-- Badge Compte à rebours des examens (masqué si aucun examen prévu) -->
+          <div class="exam-countdown-badge" id="exam-countdown-badge">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="9"></circle>
+              <path d="M12 7v5l3 2"></path>
+            </svg>
+            <span class="exam-badge-text" id="exam-countdown-text"></span>
+          </div>
+        </div>
+      </header>
+
+      <div id="schedule-container" data-density="normal"></div>
+    </section>
+  </div>
+
+  <!-- ========================================================================
+       MODALE DE CONFIGURATION SPOTIFY (OAUTH 2.0 PKCE)
+       ======================================================================== -->
+  <div class="modal-backdrop" id="sp-modal" role="dialog" aria-modal="true" aria-labelledby="sp-modal-title">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div class="modal-title-wrap">
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm4.586 14.424c-.18.295-.563.387-.857.207-2.35-1.434-5.305-1.76-8.786-.963-.335.077-.67-.133-.746-.468-.077-.335.132-.67.468-.746 3.809-.87 7.076-.496 9.713 1.115.293.18.386.563.208.855zm1.223-2.723c-.226.367-.706.482-1.072.257-2.687-1.652-6.785-2.131-9.965-1.166-.413.125-.848-.108-.973-.52-.125-.413.108-.848.52-.973 3.632-1.102 8.147-.568 11.234 1.328.366.226.48.707.256 1.074zm.105-2.835C14.692 8.95 9.375 8.775 6.297 9.71c-.493.15-1.016-.128-1.166-.62-.149-.493.129-1.016.621-1.166 3.532-1.073 9.404-.865 13.115 1.338.445.264.59.838.327 1.282-.264.444-.838.59-1.28.322z"/>
+          </svg>
+          <h2 class="modal-title" id="sp-modal-title">Configuration Spotify</h2>
+        </div>
+        <button class="modal-close-btn" id="sp-close-modal-btn" title="Fermer" aria-label="Fermer">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+
+      <p class="modal-desc">
+        Ajoutez l'adresse de redirection exacte ci-dessous dans les paramètres de votre application sur le tableau de bord Spotify Developer, puis lancez la connexion.
+      </p>
+
+      <div class="modal-uri-box">
+        <span class="modal-uri-label">Redirect URI (OAuth 2.0 PKCE)</span>
+        <span class="modal-uri-value" id="sp-uri-display">—</span>
+      </div>
+
+      <div class="modal-status-line">
+        <span class="modal-status-dot" id="sp-modal-status-dot"></span>
+        <span id="sp-modal-status-text">Non connecté</span>
+      </div>
+
+      <div class="modal-actions">
+        <button class="sp-btn danger" id="sp-logout-btn" style="display: none;">Déconnecter</button>
+        <button class="sp-btn" id="sp-copy-btn">Copier l'URI</button>
+        <button class="sp-btn primary" id="sp-connect-btn">Connecter Spotify</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Contrôles discrets en bas à droite -->
+  <nav class="utility-bar" aria-label="Contrôles du tableau de bord">
+    <button class="utility-btn" id="btn-toggle-day" title="Basculer Aujourd'hui / Demain (T)">Jour (T)</button>
+    <button class="utility-btn" id="btn-spotify-setup" title="Configurer ou connecter Spotify">Spotify</button>
+    <button class="utility-btn" id="btn-toggle-demo" title="Changer le mode de démonstration (D)">Démo (D)</button>
+  </nav>
+
+  <script>
+    /* ==========================================================================
+       1. CONFIGURATION & CONSTANTES DE CACHE (STALE-WHILE-REVALIDATE)
+       ========================================================================== */
+    const CONFIG = {
+      city: "Strasbourg",
+      lat: 48.5734,
+      lon: 7.7521,
+      icsUrl: "https://monemploidutemps.unistra.fr/api/calendar/1fd1f31b-e0f0-4588-a8dd-0985914d395a/export",
+      spotifyClientId: "3e9d3847197b40c4b6af8e21e75db7fe",
+      spotifyScopes: "user-read-currently-playing user-read-playback-state",
+      crousRestaurantId: 1394,
+      crousName: "Le PEGE",
+      crousPegeMenuUrl: "https://api.croustillant.menu/v1/restaurants/1394/menu",
+      crousPegeIcsUrl: "https://api.croustillant.menu/v1/restaurants/1394/menu/calendar.ics",
+      crousCacheKey: "tv_dash_crous_pege_v3",
+      crousCacheTtlMs: 6 * 60 * 60 * 1000, // 6 heures
+      icsCacheKey: "tv_dash_unistra_ics_v3",
+      icsCacheTtlMs: 30 * 60 * 1000,       // 30 minutes
+      weatherCacheKey: "tv_dash_weather_v3",
+      weatherCacheTtlMs: 30 * 60 * 1000    // 30 minutes
+    };
+
+    const CORS_PROXIES = [
+      url => `https://corsproxy.io/?${encodeURIComponent(url)}`,
+      url => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
+      url => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`
+    ];
+
+    let allCalendarEvents = [];
+    let lastWeatherData = null;
+    let crousSyncInFlight = null;
+
+    // 0 = Mode Réel | 1 = Démo 1/3 | 2 = Démo 2/3 | 3 = Démo 3/3
+    let demoMode = 0;
+    let manualDayToggle = false;
+
+    let lastEveningFlag = new Date().getHours() >= 19;
+    let lastDayKeyFlag = toDayKey(new Date());
+
+    /* ==========================================================================
+       2. OUTILS UTILITAIRES, RÉSEAU PARALLÈLE (ABORTCONTROLLER + PROMISE.ANY) & CACHE
+       ========================================================================== */
+    function escapeHtml(value) {
+      return String(value ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+    }
+
+    function toDayKey(dateObj) {
+      const y = dateObj.getFullYear();
+      const m = String(dateObj.getMonth() + 1).padStart(2, "0");
+      const d = String(dateObj.getDate()).padStart(2, "0");
+      return `${y}-${m}-${d}`;
+    }
+
+    /**
+     * Normalise les dates de l'API CROUStillant (YYYY-MM-DD, DD-MM-YYYY, DD/MM/YYYY)
+     * vers la clé canonique YYYY-MM-DD.
+     */
+    function normalizeApiDateKey(raw) {
+      if (!raw) return null;
+      const str = String(raw).trim();
+      const isoMatch = str.match(/^(\d{4})[-/](\d{2})[-/](\d{2})/);
+      if (isoMatch) return `${isoMatch[1]}-${isoMatch[2]}-${isoMatch[3]}`;
+      const frMatch = str.match(/^(\d{2})[-/](\d{2})[-/](\d{4})/);
+      if (frMatch) return `${frMatch[3]}-${frMatch[2]}-${frMatch[1]}`;
+      return null;
+    }
+
+    /**
+     * Polyfill Promise.any pour garantir la compatibilité sur tous les navigateurs Smart TV.
+     */
+    function promiseAny(promises) {
+      if (typeof Promise.any === "function") return Promise.any(promises);
+      return new Promise((resolve, reject) => {
+        let rejections = 0;
+        if (!promises.length) {
+          reject(new Error("Aucune promesse fournie"));
+          return;
+        }
+        promises.forEach(p => {
+          Promise.resolve(p).then(resolve, () => {
+            rejections += 1;
+            if (rejections === promises.length) {
+              reject(new Error("Toutes les requêtes ont échoué"));
+            }
+          });
+        });
+      });
+    }
+
+    /**
+     * Fetch sécurisé par AbortController avec timeout strict.
+     */
+    async function fetchWithTimeout(url, options = {}, timeoutMs = 3500) {
+      const controller = new AbortController();
+      const timerId = setTimeout(() => controller.abort(), timeoutMs);
+      try {
+        const res = await fetch(url, {
+          ...options,
+          cache: "no-store",
+          signal: controller.signal
+        });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return res;
+      } finally {
+        clearTimeout(timerId);
+      }
+    }
+
+    /**
+     * Stratégie réseau rapide :
+     * 1) Appel direct avec timeout court.
+     * 2) En cas d'échec CORS/réseau, course parallèle Promise.any sur les proxys CORS.
+     */
+    async function fetchFastWithParallelProxies(targetUrl, parserFn, directTimeoutMs = 3500, proxyTimeoutMs = 4000) {
+      try {
+        const directRes = await fetchWithTimeout(targetUrl, {}, directTimeoutMs);
+        return await parserFn(directRes);
+      } catch (directErr) {
+        const proxyTasks = CORS_PROXIES.map(buildProxyUrl => (async () => {
+          const res = await fetchWithTimeout(buildProxyUrl(targetUrl), {}, proxyTimeoutMs);
+          return await parserFn(res);
+        })());
+        return await promiseAny(proxyTasks);
+      }
+    }
+
+    function safeReadStorage(key) {
+      try {
+        const raw = localStorage.getItem(key);
+        return raw ? JSON.parse(raw) : null;
+      } catch (err) {
+        return null;
+      }
+    }
+
+    function safeWriteStorage(key, value) {
+      try {
+        localStorage.setItem(key, JSON.stringify(value));
+      } catch (err) {
+        // Ignore silencieusement les erreurs de quota localStorage
+      }
+    }
+
+    /* ==========================================================================
+       3. HORLOGE TEMPS RÉEL & BASCULE AUTOMATIQUE STRICTE À 19H00 / MINUIT
+       ========================================================================== */
+    function updateClock() {
+      const now = new Date();
+      const timeEl = document.getElementById("time");
+      const dateEl = document.getElementById("date");
+
+      if (timeEl) {
+        timeEl.textContent = now.toLocaleTimeString("fr-FR", {
+          hour: "2-digit",
+          minute: "2-digit"
+        });
+      }
+      if (dateEl) {
+        dateEl.textContent = now.toLocaleDateString("fr-FR", {
+          weekday: "long",
+          day: "numeric",
+          month: "long",
+          year: "numeric"
+        });
+      }
+
+      // Vérifie chaque seconde le passage à 19h00 pile ou le passage à minuit
+      const isEveningNow = now.getHours() >= 19;
+      const currentDayKey = toDayKey(now);
+      if (isEveningNow !== lastEveningFlag || currentDayKey !== lastDayKeyFlag) {
+        lastEveningFlag = isEveningNow;
+        lastDayKeyFlag = currentDayKey;
+        manualDayToggle = false;
+        if (demoMode === 0) {
+          refreshScheduleAndCrous(true);
+          if (lastWeatherData) renderWeather(lastWeatherData);
+        }
+      }
+    }
+
+    /* ==========================================================================
+       4. MÉTÉO STRASBOURG (OPEN-METEO : ACTUELLE, MAX/MIN, 12H PAS DE 2H, DEMAIN)
+       ========================================================================== */
+    const WMO_MAP = {
+      0:  { label: "Ciel dégagé",           icon: "sun" },
+      1:  { label: "Peu nuageux",           icon: "partly" },
+      2:  { label: "Partiellement nuageux", icon: "partly" },
+      3:  { label: "Couvert",               icon: "cloud" },
+      45: { label: "Brouillard",            icon: "fog" },
+      48: { label: "Brouillard givrant",    icon: "fog" },
+      51: { label: "Bruine légère",         icon: "rain" },
+      53: { label: "Bruine modérée",        icon: "rain" },
+      55: { label: "Bruine dense",          icon: "rain" },
+      61: { label: "Pluie faible",          icon: "rain" },
+      63: { label: "Pluie modérée",         icon: "rain" },
+      65: { label: "Pluie forte",           icon: "rain" },
+      71: { label: "Neige faible",          icon: "snow" },
+      73: { label: "Neige modérée",         icon: "snow" },
+      75: { label: "Neige forte",           icon: "snow" },
+      80: { label: "Averses faibles",       icon: "rain" },
+      81: { label: "Averses modérées",      icon: "rain" },
+      82: { label: "Fortes averses",        icon: "storm" },
+      95: { label: "Orage",                 icon: "storm" },
+      96: { label: "Orage et grêle",        icon: "storm" },
+      99: { label: "Orage violent",         icon: "storm" }
+    };
+
+    function getWeatherIconSvg(type, isNight = false) {
+      if (isNight && (type === "sun" || type === "partly")) {
+        return `<svg viewBox="0 0 24 24" fill="none" stroke="#a5b4fc" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>`;
+      }
+      switch (type) {
+        case "sun":
+          return `<svg viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4.5"/><path d="M12 2v2.2M12 19.8V22M4.93 4.93l1.56 1.56M17.51 17.51l1.56 1.56M2 12h2.2M19.8 12H22M4.93 19.07l1.56-1.56M17.51 6.49l1.56-1.56"/></svg>`;
+        case "partly":
+          return `<svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v2M4.93 4.93l1.41 1.41M20 12h2M17.66 4.93l-1.41 1.41" stroke="#fbbf24"/><path d="M15.5 7.5a4 4 0 0 0-7.2 1.3" stroke="#fbbf24"/><path d="M17.5 19H9a5 5 0 0 1-.5-9.97A6 6 0 0 1 20 11.5a3.5 3.5 0 0 1-2.5 7.5Z" stroke="#94a3b8"/></svg>`;
+        case "rain":
+          return `<svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17.5 16H9a5 5 0 0 1-.5-9.97A6 6 0 0 1 20 8.5a3.5 3.5 0 0 1-2.5 7.5Z" stroke="#94a3b8"/><path d="M8 19v2M12 18v3M16 19v2" stroke="#38bdf8"/></svg>`;
+        case "snow":
+          return `<svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17.5 16H9a5 5 0 0 1-.5-9.97A6 6 0 0 1 20 8.5a3.5 3.5 0 0 1-2.5 7.5Z" stroke="#94a3b8"/><path d="M8 19h.01M12 20h.01M16 19h.01" stroke="#e2e8f0" stroke-width="2.5"/></svg>`;
+        case "storm":
+          return `<svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17.5 16H9a5 5 0 0 1-.5-9.97A6 6 0 0 1 20 8.5a3.5 3.5 0 0 1-2.5 7.5Z" stroke="#94a3b8"/><path d="M13 13l-3 5h4l-2 4" stroke="#fbbf24"/></svg>`;
+        case "fog":
+          return `<svg viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10h16M6 14h12M4 18h14M8 6h8"/></svg>`;
+        default:
+          return `<svg viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17.5 19H9a5 5 0 0 1-.5-9.97A6 6 0 0 1 20 11.5a3.5 3.5 0 0 1-2.5 7.5Z"/></svg>`;
+      }
+    }
+
+    function renderWeather(data) {
+      if (!data || !data.current || !data.daily || !data.hourly) return;
+
+      const now = new Date();
+      const currentHour = now.getHours();
+      const isNightNow = typeof data.current.is_day === "number"
+        ? data.current.is_day === 0
+        : (currentHour >= 21 || currentHour < 7);
+
+      const currentTemp = Math.round(data.current.temperature_2m);
+      const currentWmo = WMO_MAP[data.current.weather_code] || { label: "Variable", icon: "cloud" };
+      const maxToday = Math.round(data.daily.temperature_2m_max[0]);
+      const minToday = Math.round(data.daily.temperature_2m_min[0]);
+
+      document.getElementById("city").textContent = CONFIG.city;
+      document.getElementById("temp-current").textContent = `${currentTemp}°C`;
+      document.getElementById("weather-desc").textContent = currentWmo.label;
+      document.getElementById("weather-main-icon").innerHTML = getWeatherIconSvg(currentWmo.icon, isNightNow);
+      document.getElementById("temp-max").textContent = `${maxToday}°`;
+      document.getElementById("temp-min").textContent = `${minToday}°`;
+
+      // Index de l'heure actuelle dans le flux horaire Open-Meteo
+      let startIdx = 0;
+      const nowMs = now.getTime();
+      for (let i = 0; i < data.hourly.time.length; i++) {
+        const slotDate = new Date(data.hourly.time[i]);
+        if (
+          slotDate.getFullYear() === now.getFullYear() &&
+          slotDate.getMonth() === now.getMonth() &&
+          slotDate.getDate() === now.getDate() &&
+          slotDate.getHours() === currentHour
+        ) {
+          startIdx = i;
+          break;
+        }
+        if (slotDate.getTime() >= nowMs) {
+          startIdx = Math.max(0, i - 1);
+          break;
+        }
+      }
+
+      // Fenêtre glissante sur 12 heures : 6 créneaux espacés de 2h (+2h -> +12h)
+      const slots = [];
+      for (let step = 1; step <= 6; step++) {
+        const idx = Math.min(data.hourly.time.length - 1, startIdx + step * 2);
+        const slotDate = new Date(data.hourly.time[idx]);
+        const h = slotDate.getHours();
+        const slotIsDay = Array.isArray(data.hourly.is_day) ? data.hourly.is_day[idx] : undefined;
+        slots.push({
+          isNight: typeof slotIsDay === "number" ? slotIsDay === 0 : (h >= 21 || h < 7),
+          label: `${String(h).padStart(2, "0")}h`,
+          temp: Math.round(data.hourly.temperature_2m[idx] ?? currentTemp),
+          code: data.hourly.weather_code[idx] ?? data.current.weather_code,
+          isFirst: step === 1
+        });
+      }
+
+      if (slots.length > 0) {
+        document.getElementById("hourly-window-label").textContent =
+          `${slots[0].label} → ${slots[slots.length - 1].label}`;
+      }
+
+      document.getElementById("hourly-grid").innerHTML = slots.map(slot => {
+        const wmo = WMO_MAP[slot.code] || { label: "Variable", icon: "cloud" };
+        return `
+          <div class="hourly-slot ${slot.isFirst ? "first" : ""}">
+            <span class="hourly-hour">${slot.label}</span>
+            <div class="hourly-icon">${getWeatherIconSvg(wmo.icon, slot.isNight)}</div>
+            <span class="hourly-temp">${slot.temp}°C</span>
+          </div>
+        `;
+      }).join("");
+
+      // Prévision du lendemain
+      const tomDate = new Date(data.daily.time[1]);
+      const tomDayName = tomDate.toLocaleDateString("fr-FR", { weekday: "long" });
+      const tomWmo = WMO_MAP[data.daily.weather_code[1]] || { label: "Variable", icon: "cloud" };
+      const tomMin = Math.round(data.daily.temperature_2m_min[1]);
+      const tomMax = Math.round(data.daily.temperature_2m_max[1]);
+
+      document.getElementById("tomorrow-title").textContent = `Demain • ${tomDayName}`;
+      document.getElementById("tomorrow-desc").textContent = tomWmo.label;
+      document.getElementById("tomorrow-icon").innerHTML = getWeatherIconSvg(tomWmo.icon, false);
+      document.getElementById("tomorrow-min").textContent = `${tomMin}°`;
+      document.getElementById("tomorrow-max").textContent = `${tomMax}°C`;
+    }
+
+    function hydrateWeatherFromCache() {
+      const cached = safeReadStorage(CONFIG.weatherCacheKey);
+      if (cached && cached.data && (Date.now() - cached.savedAt) < CONFIG.weatherCacheTtlMs) {
+        lastWeatherData = cached.data;
+        renderWeather(lastWeatherData);
+      }
+    }
+
+    async function fetchWeather() {
+      try {
+        const url =
+          `https://api.open-meteo.com/v1/forecast?latitude=${CONFIG.lat}&longitude=${CONFIG.lon}` +
+          `&current=temperature_2m,weather_code,is_day&hourly=temperature_2m,weather_code,is_day` +
+          `&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=Europe%2FParis&forecast_days=3`;
+        const res = await fetchWithTimeout(url, {}, 4000);
+        lastWeatherData = await res.json();
+        safeWriteStorage(CONFIG.weatherCacheKey, { savedAt: Date.now(), data: lastWeatherData });
+        renderWeather(lastWeatherData);
+      } catch (err) {
+        console.error("Erreur météo Open-Meteo:", err);
+      }
+    }
+
+    /* ==========================================================================
+       5. EMPLOI DU TEMPS UNISTRA (.ICS) — CACHE 30 MIN + PROXYS PARALLÈLES
+       ========================================================================== */
+    function parseIcsDate(raw) {
+      if (!raw) return null;
+      const clean = raw.trim();
+      if (clean.length === 8) {
+        return new Date(
+          parseInt(clean.slice(0, 4), 10),
+          parseInt(clean.slice(4, 6), 10) - 1,
+          parseInt(clean.slice(6, 8), 10),
+          0, 0, 0
+        );
+      }
+      const y = parseInt(clean.slice(0, 4), 10);
+      const m = parseInt(clean.slice(4, 6), 10) - 1;
+      const d = parseInt(clean.slice(6, 8), 10);
+      const hh = parseInt(clean.slice(9, 11), 10) || 0;
+      const mm = parseInt(clean.slice(11, 13), 10) || 0;
+      const ss = parseInt(clean.slice(13, 15), 10) || 0;
+      if (clean.endsWith("Z")) {
+        return new Date(Date.UTC(y, m, d, hh, mm, ss));
+      }
+      return new Date(y, m, d, hh, mm, ss);
+    }
+
+    function cleanIcsText(txt) {
+      if (!txt) return "";
+      return txt
+        .replace(/\\n/gi, " • ")
+        .replace(/\\,/g, ",")
+        .replace(/\\;/g, ";")
+        .replace(/\s+/g, " ")
+        .trim();
+    }
+
+    /**
+     * Détection intelligente des examens :
+     * Neutralise impérativement les matières contenant le mot "contrôle"
+     * ("contrôle de gestion", "contrôle interne", "contrôle des risques",
+     * "contrôle qualité", "contrôle budgétaire") avant d'évaluer les mots-clés.
+     * Un intitulé comme "Partiel Contrôle de gestion" reste bien détecté via "Partiel".
+     */
+    function isExamEvent(title, description = "") {
+      const combined = `${title || ""} ${description || ""}`;
+      const sanitized = combined.replace(
+        /\bcontr[ôo]le\s+(?:de\s+gestion(?:\s+et\s+audit)?|interne|des\s+risques|qualit[ée]|budg[ée]taire)\b/gi,
+        ""
+      );
+      return /\b(partiels?|examens?|exam|contr[ôo]le\s+continu|contr[ôo]le\s+terminal|contr[ôo]le\s+final|[ée]preuves?|soutenances?|qcm|cc|ct)\b/i.test(sanitized);
+    }
+
+    function cleanExamSubjectName(rawTitle) {
+      if (!rawTitle) return "Évaluation";
+      const cleaned = rawTitle
+        .replace(/^(partiels?|examens?|exam|contr[ôo]le\s+continu|contr[ôo]le\s+terminal|contr[ôo]le\s+final|[ée]preuves?|soutenances?|qcm|cc|ct)\s*(?:de\s+|d['’]|[-:•–—]\s*)?/i, "")
+        .trim();
+      return cleaned || rawTitle;
+    }
+
+    function updateExamCountdown(eventsPool) {
+      const badgeEl = document.getElementById("exam-countdown-badge");
+      const textEl = document.getElementById("exam-countdown-text");
+      if (!badgeEl || !textEl) return;
+
+      const now = new Date();
+      const todayMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+      const upcomingExams = eventsPool
+        .filter(ev => ev.end >= now && (ev.isExam === true || isExamEvent(ev.title, ev.description)))
+        .sort((a, b) => a.start - b.start);
+
+      // Masquage total si aucun examen prévu dans les semaines à venir
+      if (upcomingExams.length === 0) {
+        badgeEl.style.display = "none";
+        textEl.textContent = "";
+        return;
+      }
+
+      const nextExam = upcomingExams[0];
+      const examMidnight = new Date(
+        nextExam.start.getFullYear(),
+        nextExam.start.getMonth(),
+        nextExam.start.getDate()
+      );
+      const diffDays = Math.round((examMidnight - todayMidnight) / 86400000);
+      const subject = cleanExamSubjectName(nextExam.title);
+
+      badgeEl.style.display = "inline-flex";
+      if (diffDays <= 0) {
+        badgeEl.className = "exam-countdown-badge urgent";
+        textEl.textContent = `Partiel aujourd'hui • ${subject}`;
+      } else if (diffDays === 1) {
+        badgeEl.className = "exam-countdown-badge urgent";
+        textEl.textContent = `Partiel demain • ${subject}`;
+      } else if (diffDays <= 7) {
+        badgeEl.className = "exam-countdown-badge urgent";
+        textEl.textContent = `Partiel dans ${diffDays} j • ${subject}`;
+      } else {
+        badgeEl.className = "exam-countdown-badge";
+        textEl.textContent = `Partiel dans ${diffDays} j • ${subject}`;
+      }
+    }
+
+    function resolveTargetDay(eventsPool) {
+      const now = new Date();
+      const autoTomorrow = now.getHours() >= 19;
+      const showTomorrow = manualDayToggle ? !autoTomorrow : autoTomorrow;
+
+      const targetDate = showTomorrow
+        ? new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1)
+        : new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+      const targetKey = toDayKey(targetDate);
+      const dayEvents = eventsPool
+        .filter(ev => toDayKey(ev.start) === targetKey)
+        .sort((a, b) => a.start - b.start);
+
+      return {
+        events: dayEvents,
+        targetDate,
+        isTomorrow: showTomorrow
+      };
+    }
+
+    function renderSchedule(resolved) {
+      const container = document.getElementById("schedule-container");
+      const dayLabelEl = document.getElementById("schedule-day-label");
+      const tomorrowPillEl = document.getElementById("tomorrow-pill");
+      if (!container || !dayLabelEl || !tomorrowPillEl) return;
+
+      const now = new Date();
+      const isViewingToday = toDayKey(resolved.targetDate) === toDayKey(now);
+      const sorted = [...resolved.events].sort((a, b) => a.start - b.start);
+
+      const formattedDate = resolved.targetDate.toLocaleDateString("fr-FR", {
+        weekday: "long",
+        day: "numeric",
+        month: "long"
+      });
+
+      dayLabelEl.textContent = formattedDate;
+      tomorrowPillEl.style.display = resolved.isTomorrow ? "inline-flex" : "none";
+
+      // Densité adaptative : normal <= 4, compact 5-6, grid-2 >= 7
+      if (sorted.length >= 7) {
+        container.setAttribute("data-density", "grid-2");
+      } else if (sorted.length >= 5) {
+        container.setAttribute("data-density", "compact");
+      } else {
+        container.setAttribute("data-density", "normal");
+      }
+
+      if (sorted.length === 0) {
+        container.innerHTML = `
+          <div class="empty-schedule">
+            <div class="empty-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <rect width="18" height="18" x="3" y="4" rx="2" ry="2"></rect>
+                <line x1="16" x2="16" y1="2" y2="6"></line>
+                <line x1="8" x2="8" y1="2" y2="6"></line>
+                <line x1="3" x2="21" y1="10" y2="10"></line>
+                <path d="m9 16 2 2 4-4"></path>
+              </svg>
+            </div>
+            <div class="empty-title">Aucun cours prévu</div>
+            <div class="empty-sub">Votre emploi du temps est entièrement libre pour le ${escapeHtml(formattedDate)}.</div>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = sorted.map(ev => {
+        const startStr = ev.start.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
+        const endStr = ev.end.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
+
+        const isOngoing = isViewingToday && now >= ev.start && now <= ev.end;
+        const isPast = isViewingToday && now > ev.end;
+        const isExam = ev.isExam === true || isExamEvent(ev.title, ev.description);
+
+        const durMin = Math.max(1, Math.round((ev.end - ev.start) / 60000));
+        const dh = Math.floor(durMin / 60);
+        const dm = durMin % 60;
+        const durLabel = dh > 0 ? `${dh}h${dm > 0 ? String(dm).padStart(2, "0") : ""}` : `${dm} min`;
+
+        let cardClass = isExam ? "exam-event" : "";
+        let pillHtml = isExam
+          ? `<span class="event-pill exam">Examen • ${durLabel}</span>`
+          : `<span class="event-pill">${durLabel}</span>`;
+
+        if (isOngoing) {
+          cardClass = "ongoing";
+          pillHtml = `<span class="event-pill live">En cours</span>`;
+        } else if (isPast) {
+          cardClass = "past";
+          pillHtml = `<span class="event-pill">Terminé</span>`;
+        }
+
+        const locText = ev.location ? ev.location : "Salle non précisée";
+
+        return `
+          <article class="event-card ${cardClass}">
+            <div class="event-time-col">
+              <span class="time-start">${startStr}</span>
+              <span class="time-end">${endStr}</span>
+            </div>
+            <div class="event-details-col">
+              <div class="event-top-line">
+                <h2 class="event-title">${escapeHtml(ev.title)}</h2>
+                ${pillHtml}
+              </div>
+              <div class="event-location">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"></path>
+                  <circle cx="12" cy="10" r="3"></circle>
+                </svg>
+                <span>${escapeHtml(locText)}</span>
+              </div>
+            </div>
+          </article>
+        `;
+      }).join("");
+    }
+
+    function hydrateScheduleFromCache() {
+      const cached = safeReadStorage(CONFIG.icsCacheKey);
+      if (!cached || !Array.isArray(cached.events)) return false;
+
+      allCalendarEvents = cached.events.map(item => ({
+        start: new Date(item.s),
+        end: new Date(item.e),
+        title: item.t,
+        location: item.l,
+        description: item.d,
+        isExam: isExamEvent(item.t, item.d)
+      }));
+      return true;
+    }
+
+    function saveScheduleToCache(events) {
+      const now = Date.now();
+      const minKeep = now - 2 * 86400000;
+      const maxKeep = now + 90 * 86400000;
+      const compact = events
+        .filter(ev => ev.end.getTime() >= minKeep && ev.start.getTime() <= maxKeep)
+        .map(ev => ({
+          s: ev.start.getTime(),
+          e: ev.end.getTime(),
+          t: ev.title,
+          l: ev.location,
+          d: ev.description
+        }));
+      safeWriteStorage(CONFIG.icsCacheKey, { savedAt: now, events: compact });
+    }
+
+    function parseIcsCalendarText(rawIcs) {
+      const unfolded = rawIcs.replace(/\r?\n[ \t]/g, "");
+      const blocks = unfolded.split("BEGIN:VEVENT").slice(1);
+      const parsed = [];
+
+      for (const block of blocks) {
+        const content = block.split("END:VEVENT")[0];
+        const dtStartMatch = content.match(/DTSTART(?:;[^:]*)?:([^\r\n]+)/);
+        const dtEndMatch = content.match(/DTEND(?:;[^:]*)?:([^\r\n]+)/);
+        const summaryMatch = content.match(/SUMMARY(?:;[^:]*)?:([^\r\n]+)/);
+        const locationMatch = content.match(/LOCATION(?:;[^:]*)?:([^\r\n]+)/);
+        const descMatch = content.match(/DESCRIPTION(?:;[^:]*)?:([^\r\n]+)/);
+
+        if (!dtStartMatch) continue;
+        const startDate = parseIcsDate(dtStartMatch[1]);
+        const endDate = dtEndMatch ? parseIcsDate(dtEndMatch[1]) : startDate;
+        if (!startDate) continue;
+
+        const title = cleanIcsText(summaryMatch ? summaryMatch[1] : "Cours universitaire");
+        const location = cleanIcsText(locationMatch ? locationMatch[1] : "");
+        const description = cleanIcsText(descMatch ? descMatch[1] : "");
+
+        parsed.push({
+          start: startDate,
+          end: endDate || startDate,
+          title,
+          location,
+          description,
+          isExam: isExamEvent(title, description)
+        });
+      }
+      return parsed;
+    }
+
+    async function fetchSchedule() {
+      try {
+        const rawIcs = await fetchFastWithParallelProxies(
+          CONFIG.icsUrl,
+          async res => {
+            const txt = await res.text();
+            if (!txt.includes("BEGIN:VCALENDAR")) {
+              throw new Error("Flux ICS invalide");
+            }
+            return txt;
+          },
+          4000,
+          4500
+        );
+
+        allCalendarEvents = parseIcsCalendarText(rawIcs);
+        saveScheduleToCache(allCalendarEvents);
+
+        if (demoMode === 0) {
+          updateExamCountdown(allCalendarEvents);
+          renderSchedule(resolveTargetDay(allCalendarEvents));
+        }
+      } catch (err) {
+        console.error("Erreur synchronisation emploi du temps:", err);
+        if (demoMode === 0) {
+          updateExamCountdown(allCalendarEvents);
+          renderSchedule(resolveTargetDay(allCalendarEvents));
+        }
+      }
+    }
+
+    /* ==========================================================================
+       6. MENU CROUS • LE PEGE (ENDPOINT DIRECT 1394, CACHE 6H, FILTRE STRICT)
+       ========================================================================== */
+    function setCrousSyncIndicator(isSyncing) {
+      const dot = document.getElementById("crous-sync-dot");
+      if (dot) dot.classList.toggle("syncing", Boolean(isSyncing));
+    }
+
+    function readCrousCacheStore() {
+      const store = safeReadStorage(CONFIG.crousCacheKey);
+      if (!store || typeof store !== "object" || typeof store.days !== "object") {
+        return { updatedAt: 0, days: {} };
+      }
+
+      // Purge automatique des dates dépassées (antérieures à aujourd'hui)
+      const todayKey = toDayKey(new Date());
+      let cleaned = false;
+      for (const dateKey of Object.keys(store.days)) {
+        if (dateKey < todayKey) {
+          delete store.days[dateKey];
+          cleaned = true;
+        }
+      }
+      if (cleaned) safeWriteStorage(CONFIG.crousCacheKey, store);
+      return store;
+    }
+
+    function writeCrousCacheDays(menusByDate) {
+      const store = readCrousCacheStore();
+      const now = Date.now();
+      for (const [dateKey, menuObj] of Object.entries(menusByDate)) {
+        store.days[dateKey] = {
+          savedAt: now,
+          platDuJour: menuObj.platDuJour || [],
+          menuVege: menuObj.menuVege || []
+        };
+      }
+      store.updatedAt = now;
+      safeWriteStorage(CONFIG.crousCacheKey, store);
+    }
+
+    // Exclut Petit déjeuner, Origine des viandes, Entrées, Desserts, Boissons...
+    function isExcludedCrousCategory(name) {
+      if (!name) return false;
+      return /(origine|viande|petit[\s-]*d[eé]jeuner|matin|breakfast|viennoiserie|caf[eé]|entr[eé]e|dessert|fromage|boisson|suppl[eé]ment|info|allerg[eè]ne|tarif|paiement|fermeture)/i.test(name);
+    }
+
+    // Exclut toute ligne concernant l'origine des viandes ou le petit déjeuner
+    function isExcludedDishLine(text) {
+      if (!text) return true;
+      const clean = text.trim();
+      if (clean.length < 3) return true;
+      if (/(origine\s*(des\s*viandes|:)?|viande\s*(bovine|porcine|de\s*volaille|origine)|b[oœ]uf\s*:|porc\s*:|volaille\s*:|veau\s*:|agneau\s*:|dinde\s*:|poulet\s*:|\bue\b|hors\s*ue|union\s*europ[eé]enne|n[eé]\s*(et\s*[eé]lev[eé]|en\b)|[eé]lev[eé]\s*en|abattu\s*en|origine\s+france|france\s*\/)/i.test(clean)) {
+        return true;
+      }
+      if (/^(origine|b[oœ]uf|porc|volaille|veau|agneau|france)\s*[-–:]/i.test(clean)) {
+        return true;
+      }
+      if (/(petit[\s-]*d[eé]j(?:euner)?|viennoiserie|croissant|pain\s+au\s+chocolat|boisson\s+chaude|formule\s+matin|caf[eé]\s+cr[eè]me|chocolat\s+chaud|brioche|th[eé]\s+ou\s+caf[eé])/i.test(clean)) {
+        return true;
+      }
+      if (/(tarif|izly|paiement|carte\s*bancaire|bon\s*app[eé]tit|ouverture|fermeture|horaire|menu\s*susceptible|allerg[eè]ne)/i.test(clean)) {
+        return true;
+      }
+      return false;
+    }
+
+    function isVegetarianText(text) {
+      if (!text) return false;
+      return /(v[eé]g[eé]tarien|veggie|v[eé]g[eé]tal|sans\s+viande|tofu|falafel|seitan|steak\s+soja|galette\s+de\s+l[eé]gumes)/i.test(text);
+    }
+
+    function extractTwoCrousColumns(categories) {
+      if (!Array.isArray(categories)) return null;
+
+      const platDuJour = [];
+      const menuVege = [];
+      const unclassified = [];
+
+      for (const cat of categories) {
+        if (!cat) continue;
+        const poleName = String(cat.libelle || cat.nom || cat.name || cat.categorie || cat.title || "").trim();
+        if (isExcludedCrousCategory(poleName)) continue;
+
+        const rawItems = cat.plats || cat.dishes || cat.items || cat.aliments || [];
+        let dishes = [];
+        if (Array.isArray(rawItems)) {
+          dishes = rawItems
+            .map(d => (typeof d === "string" ? d : String(d.libelle || d.nom || d.name || d.title || "")).trim())
+            .filter(d => !isExcludedDishLine(d));
+        } else if (typeof cat === "string" && !isExcludedDishLine(cat)) {
+          dishes = [cat.trim()];
+        }
+
+        if (dishes.length === 0) continue;
+
+        if (isVegetarianText(poleName)) {
+          menuVege.push(...dishes);
+        } else if (/(plat\s*du\s*jour|menu\s*du\s*jour|traditionnel|plat\s*principal|plat|menu|grill|brasserie|cuisine|r[oô]tisserie)/i.test(poleName)) {
+          for (const dish of dishes) {
+            if (isVegetarianText(dish)) {
+              menuVege.push(dish.replace(/^(?:menu\s*v[eé]g[eé]tarien|plat\s*v[eé]g[eé]tarien|v[eé]g[eé]tarien)\s*[-:•]\s*/i, "").trim());
+            } else {
+              platDuJour.push(dish);
+            }
+          }
+        } else {
+          unclassified.push(...dishes);
+        }
+      }
+
+      for (const dish of unclassified) {
+        if (isVegetarianText(dish)) {
+          menuVege.push(dish.replace(/^(?:menu\s*v[eé]g[eé]tarien|plat\s*v[eé]g[eé]tarien|v[eé]g[eé]tarien)\s*[-:•]\s*/i, "").trim());
+        } else if (platDuJour.length < 3) {
+          platDuJour.push(dish);
+        }
+      }
+
+      const uniquePlat = [...new Set(platDuJour)].slice(0, 3);
+      const uniqueVege = [...new Set(menuVege)].slice(0, 3);
+
+      if (uniquePlat.length === 0 && uniqueVege.length === 0) return null;
+      return { platDuJour: uniquePlat, menuVege: uniqueVege };
+    }
+
+    function extractMenuFromDayObject(dayObj) {
+      if (!dayObj || typeof dayObj !== "object") return null;
+
+      const meals = dayObj.repas || dayObj.meals || dayObj.services;
+      if (Array.isArray(meals) && meals.length > 0) {
+        const lunchMeals = meals.filter(m => {
+          const label = String(m.type || m.nom || m.name || m.title || "");
+          return !/(petit[\s-]*d[eé]jeuner|matin|breakfast)/i.test(label);
+        });
+        if (lunchMeals.length === 0) return null;
+
+        const midi = lunchMeals.find(m => /midi|d[eé]jeuner|lunch/i.test(String(m.type || m.nom || m.name || ""))) || lunchMeals[0];
+        const cats = midi.categories || midi.poles || midi.plats || midi.foodies || [];
+        return extractTwoCrousColumns(cats);
+      }
+
+      const directCats = dayObj.categories || dayObj.poles || dayObj.plats || dayObj.menu;
+      if (Array.isArray(directCats)) return extractTwoCrousColumns(directCats);
+      return null;
+    }
+
+    function parseAllCrousMenusPayload(payload) {
+      const menusByDate = {};
+      if (!payload) return menusByDate;
+      const root = payload.data !== undefined ? payload.data : payload;
+
+      if (Array.isArray(root)) {
+        for (const entry of root) {
+          if (!entry || typeof entry !== "object") continue;
+          const dateKey = normalizeApiDateKey(entry.date || entry.jour || entry.day);
+          if (!dateKey) continue;
+          const parsed = extractMenuFromDayObject(entry);
+          if (parsed) menusByDate[dateKey] = parsed;
+        }
+        return menusByDate;
+      }
+
+      if (typeof root === "object") {
+        const dateKey = normalizeApiDateKey(root.date || root.jour || root.day) || toDayKey(new Date());
+        const parsed = extractMenuFromDayObject(root);
+        if (parsed) menusByDate[dateKey] = parsed;
+      }
+      return menusByDate;
+    }
+
+    function parseAllCrousMenusFromIcs(rawIcs) {
+      const menusByDate = {};
+      const unfolded = rawIcs.replace(/\r?\n[ \t]/g, "");
+      const blocks = unfolded.split("BEGIN:VEVENT").slice(1);
+
+      for (const block of blocks) {
+        const content = block.split("END:VEVENT")[0];
+        const dtStartMatch = content.match(/DTSTART(?:;[^:]*)?:([^\r\n]+)/);
+        const summaryMatch = content.match(/SUMMARY(?:;[^:]*)?:([^\r\n]+)/);
+        const descMatch = content.match(/DESCRIPTION(?:;[^:]*)?:([^\r\n]+)/);
+        if (!dtStartMatch || !descMatch) continue;
+
+        const summary = summaryMatch ? cleanIcsText(summaryMatch[1]) : "";
+        if (/(petit[\s-]*d[eé]jeuner|matin|breakfast)/i.test(summary)) continue;
+
+        const startDate = parseIcsDate(dtStartMatch[1]);
+        if (!startDate) continue;
+        const dateKey = toDayKey(startDate);
+
+        const lines = descMatch[1]
+          .split(/\\n|\r?\n/)
+          .map(l => l.replace(/\\,/g, ",").replace(/\\;/g, ";").trim())
+          .filter(Boolean);
+
+        const rawCategories = [];
+        let currentCat = { libelle: "Plat du jour", plats: [] };
+
+        for (const line of lines) {
+          if (line.endsWith(":") || (line.length < 34 && /^[A-ZÀÂÄÉÈÊËÎÏÔÖÙÛÜÇ\s\/\-]+$/.test(line))) {
+            if (currentCat.plats.length > 0) rawCategories.push(currentCat);
+            currentCat = { libelle: line.replace(/:$/, "").trim(), plats: [] };
+          } else {
+            const cleaned = line.replace(/^[-•*]\s*/, "").trim();
+            if (!isExcludedDishLine(cleaned)) currentCat.plats.push(cleaned);
+          }
+        }
+        if (currentCat.plats.length > 0) rawCategories.push(currentCat);
+
+        const parsed = extractTwoCrousColumns(rawCategories);
+        if (parsed) menusByDate[dateKey] = parsed;
+      }
+      return menusByDate;
+    }
+
+    function updateCrousHeaderDate(targetDate) {
+      const badgeEl = document.getElementById("crous-day-badge");
+      if (!badgeEl) return;
+      const isToday = toDayKey(targetDate) === toDayKey(new Date());
+      badgeEl.textContent = isToday ? "Aujourd'hui" : "Demain";
+      badgeEl.classList.toggle("is-tomorrow", !isToday);
+    }
+
+    function renderCrousMenu(menuData, targetDate, customEmptyMsg = "") {
+      const container = document.getElementById("crous-container");
+      if (!container) return;
+
+      updateCrousHeaderDate(targetDate);
+
+      const dayOfWeek = targetDate.getDay();
+      const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+
+      if (!menuData || (menuData.platDuJour.length === 0 && menuData.menuVege.length === 0)) {
+        const msg = customEmptyMsg || (isWeekend
+          ? "Fermé le week-end • Aucun menu publié"
+          : "Restaurant fermé • Aucun menu publié pour ce jour");
+        container.innerHTML = `
+          <div class="crous-empty">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="9"></circle>
+              <line x1="12" x2="12" y1="8" y2="12"></line>
+              <line x1="12" x2="12.01" y1="16" y2="16"></line>
+            </svg>
+            <span>${escapeHtml(msg)}</span>
+          </div>
+        `;
+        return;
+      }
+
+      const renderItems = items => {
+        if (!items || items.length === 0) {
+          return `<li class="crous-dish-item muted">Non communiqué pour ce service</li>`;
+        }
+        return items.map(item => `<li class="crous-dish-item">${escapeHtml(item)}</li>`).join("");
+      };
+
+      container.innerHTML = `
+        <article class="crous-pole-card">
+          <div class="crous-pole-header">
+            <span class="crous-pole-dot"></span>
+            <span class="crous-pole-title">Plat du jour</span>
+          </div>
+          <ul class="crous-dish-list">${renderItems(menuData.platDuJour)}</ul>
+        </article>
+
+        <article class="crous-pole-card vege">
+          <div class="crous-pole-header">
+            <span class="crous-pole-dot"></span>
+            <span class="crous-pole-title">Menu végétarien</span>
+          </div>
+          <ul class="crous-dish-list">${renderItems(menuData.menuVege)}</ul>
+        </article>
+      `;
+    }
+
+    async function syncCrousPegeFromNetwork() {
+      if (crousSyncInFlight) return crousSyncInFlight;
+
+      setCrousSyncIndicator(true);
+      crousSyncInFlight = (async () => {
+        try {
+          let menusByDate = {};
+
+          // 1) Endpoint direct JSON Le PEGE (1394) avec timeout 3.5s puis proxys parallèles 4s
+          try {
+            const payload = await fetchFastWithParallelProxies(
+              CONFIG.crousPegeMenuUrl,
+              async res => {
+                const json = await res.json();
+                if (!json || typeof json !== "object") throw new Error("JSON CROUStillant invalide");
+                return json;
+              },
+              3500,
+              4000
+            );
+            menusByDate = parseAllCrousMenusPayload(payload);
+          } catch (jsonErr) {
+            // 2) Repli direct sur le flux ICS du PEGE (1394)
+            try {
+              const rawIcs = await fetchFastWithParallelProxies(
+                CONFIG.crousPegeIcsUrl,
+                async res => {
+                  const text = await res.text();
+                  if (!text.includes("BEGIN:VCALENDAR")) throw new Error("ICS CROUStillant invalide");
+                  return text;
+                },
+                3500,
+                4000
+              );
+              menusByDate = parseAllCrousMenusFromIcs(rawIcs);
+            } catch (icsErr) {
+              console.error("Échec JSON et ICS CROUStillant Le PEGE:", icsErr);
+              return null;
+            }
+          }
+
+          if (Object.keys(menusByDate).length > 0) {
+            writeCrousCacheDays(menusByDate);
+          }
+          return menusByDate;
+        } finally {
+          setCrousSyncIndicator(false);
+          crousSyncInFlight = null;
+        }
+      })();
+
+      return crousSyncInFlight;
+    }
+
+    async function displayAndRefreshCrousForDate(targetDate, forceNetwork = false) {
+      if (demoMode !== 0) return;
+
+      const dayKey = toDayKey(targetDate);
+      const dayOfWeek = targetDate.getDay();
+
+      // Week-end : état fermé immédiat sans attente réseau
+      if (dayOfWeek === 0 || dayOfWeek === 6) {
+        renderCrousMenu(null, targetDate);
+        return;
+      }
+
+      const store = readCrousCacheStore();
+      const cachedDay = store.days[dayKey] || null;
+      const isFresh = cachedDay && (Date.now() - cachedDay.savedAt) < CONFIG.crousCacheTtlMs;
+
+      // Affichage 0 ms depuis le cache localStorage (Stale-While-Revalidate)
+      if (cachedDay) {
+        renderCrousMenu(cachedDay, targetDate);
+        if (isFresh && !forceNetwork) return;
+      } else {
+        updateCrousHeaderDate(targetDate);
+        const container = document.getElementById("crous-container");
+        if (container) {
+          container.innerHTML = `<div class="crous-empty">Récupération du menu Le PEGE...</div>`;
+        }
+      }
+
+      const freshMap = await syncCrousPegeFromNetwork();
+      if (demoMode !== 0) return;
+
+      const currentTarget = resolveTargetDay(allCalendarEvents).targetDate;
+      const currentKey = toDayKey(currentTarget);
+
+      if (freshMap && freshMap[currentKey]) {
+        renderCrousMenu(freshMap[currentKey], currentTarget);
+      } else {
+        const latestStore = readCrousCacheStore();
+        const fallbackCached = latestStore.days[currentKey] || null;
+        if (fallbackCached) {
+          renderCrousMenu(fallbackCached, currentTarget);
+        } else if (freshMap === null) {
+          renderCrousMenu(null, currentTarget, "Menu Le PEGE momentanément indisponible");
+        } else {
+          renderCrousMenu(null, currentTarget);
+        }
+      }
+    }
+
+    function refreshScheduleAndCrous(forceCrous = false) {
+      if (demoMode !== 0) return;
+      updateExamCountdown(allCalendarEvents);
+      const resolved = resolveTargetDay(allCalendarEvents);
+      renderSchedule(resolved);
+      displayAndRefreshCrousForDate(resolved.targetDate, forceCrous);
+    }
+
+    /* ==========================================================================
+       7. SPOTIFY WEB API (OAUTH 2.0 PKCE + POLLING 5S + INTERPOLATION 1S)
+       ========================================================================== */
+    const SP_STORAGE = {
+      verifier: "sp_pkce_verifier",
+      access: "sp_access_token",
+      refresh: "sp_refresh_token",
+      expires: "sp_expires_at"
+    };
+
+    let spState = {
+      hasTrack: false,
+      isPlaying: false,
+      title: "",
+      artist: "",
+      cover: "",
+      progressMs: 0,
+      durationMs: 0,
+      lastTick: 0
+    };
+
+    function getSpotifyRedirectUri() {
+      return window.location.origin + window.location.pathname;
+    }
+
+    function formatMs(ms) {
+      const totalSec = Math.max(0, Math.floor(ms / 1000));
+      const m = Math.floor(totalSec / 60);
+      const s = totalSec % 60;
+      return `${m}:${String(s).padStart(2, "0")}`;
+    }
+
+    function generatePkceVerifier(length = 64) {
+      const charset = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~";
+      const randomBytes = crypto.getRandomValues(new Uint8Array(length));
+      return Array.from(randomBytes, b => charset[b % charset.length]).join("");
+    }
+
+    async function computePkceChallenge(verifier) {
+      const data = new TextEncoder().encode(verifier);
+      const digest = await crypto.subtle.digest("SHA-256", data);
+      return btoa(String.fromCharCode(...new Uint8Array(digest)))
+        .replace(/=/g, "")
+        .replace(/\+/g, "-")
+        .replace(/\//g, "_");
+    }
+
+    async function startSpotifyAuth() {
+      try {
+        const verifier = generatePkceVerifier(64);
+        localStorage.setItem(SP_STORAGE.verifier, verifier);
+        const challenge = await computePkceChallenge(verifier);
+
+        const params = new URLSearchParams({
+          client_id: CONFIG.spotifyClientId,
+          response_type: "code",
+          redirect_uri: getSpotifyRedirectUri(),
+          code_challenge_method: "S256",
+          code_challenge: challenge,
+          scope: CONFIG.spotifyScopes
+        });
+        window.location.href = `https://accounts.spotify.com/authorize?${params.toString()}`;
+      } catch (err) {
+        console.error("Erreur initialisation OAuth Spotify:", err);
+      }
+    }
+
+    function saveSpotifyTokens(data) {
+      if (!data || !data.access_token) return;
+      localStorage.setItem(SP_STORAGE.access, data.access_token);
+      if (data.refresh_token) localStorage.setItem(SP_STORAGE.refresh, data.refresh_token);
+      const expiresAt = Date.now() + ((data.expires_in || 3600) * 1000) - 60000;
+      localStorage.setItem(SP_STORAGE.expires, String(expiresAt));
+    }
+
+    function disconnectSpotify() {
+      localStorage.removeItem(SP_STORAGE.access);
+      localStorage.removeItem(SP_STORAGE.refresh);
+      localStorage.removeItem(SP_STORAGE.expires);
+      localStorage.removeItem(SP_STORAGE.verifier);
+      spState.hasTrack = false;
+      spState.isPlaying = false;
+      updateSpotifyModalState();
+      updateSpotifyUI();
+    }
+
+    async function exchangeCodeForSpotifyToken(code) {
+      const verifier = localStorage.getItem(SP_STORAGE.verifier);
+      if (!verifier) return;
+      try {
+        const body = new URLSearchParams({
+          client_id: CONFIG.spotifyClientId,
+          grant_type: "authorization_code",
+          code,
+          redirect_uri: getSpotifyRedirectUri(),
+          code_verifier: verifier
+        });
+        const res = await fetchWithTimeout("https://accounts.spotify.com/api/token", {
+          method: "POST",
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          body
+        }, 5000);
+        const data = await res.json();
+        saveSpotifyTokens(data);
+      } catch (err) {
+        console.error("Erreur échange token Spotify:", err);
+      }
+    }
+
+    async function refreshSpotifyToken() {
+      const refresh = localStorage.getItem(SP_STORAGE.refresh);
+      if (!refresh) return false;
+      try {
+        const body = new URLSearchParams({
+          client_id: CONFIG.spotifyClientId,
+          grant_type: "refresh_token",
+          refresh_token: refresh
+        });
+        const res = await fetchWithTimeout("https://accounts.spotify.com/api/token", {
+          method: "POST",
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          body
+        }, 5000);
+        const data = await res.json();
+        saveSpotifyTokens(data);
+        return true;
+      } catch (err) {
+        return false;
+      }
+    }
+
+    async function getValidSpotifyToken() {
+      const token = localStorage.getItem(SP_STORAGE.access);
+      const exp = parseInt(localStorage.getItem(SP_STORAGE.expires) || "0", 10);
+      if (token && Date.now() < exp) return token;
+      if (localStorage.getItem(SP_STORAGE.refresh)) {
+        const refreshed = await refreshSpotifyToken();
+        if (refreshed) return localStorage.getItem(SP_STORAGE.access);
+      }
+      return null;
+    }
+
+    function updateSpotifyModalState() {
+      const hasAccount = Boolean(localStorage.getItem(SP_STORAGE.access) || localStorage.getItem(SP_STORAGE.refresh));
+      document.getElementById("sp-uri-display").textContent = getSpotifyRedirectUri();
+      document.getElementById("sp-modal-status-dot").classList.toggle("connected", hasAccount);
+      document.getElementById("sp-modal-status-text").textContent = hasAccount
+        ? "Compte Spotify connecté (rafraîchissement automatique actif)"
+        : "Aucun compte connecté";
+      document.getElementById("sp-logout-btn").style.display = hasAccount ? "inline-block" : "none";
+      document.getElementById("sp-connect-btn").textContent = hasAccount ? "Reconnecter Spotify" : "Connecter Spotify";
+    }
+
+    function openSpotifyModal() {
+      updateSpotifyModalState();
+      document.getElementById("sp-modal").classList.add("open");
+    }
+
+    function closeSpotifyModal() {
+      document.getElementById("sp-modal").classList.remove("open");
+    }
+
+    function renderSpotifyTrack(track) {
+      const widget = document.getElementById("spotify-widget");
+      widget.classList.add("is-visible");
+
+      document.getElementById("sp-title").textContent = track.title || "Titre inconnu";
+      document.getElementById("sp-artist").textContent = track.artist || "Artiste";
+
+      const badge = document.getElementById("sp-status-badge");
+      const eq = document.getElementById("sp-eq");
+      const label = document.getElementById("sp-status-label");
+
+      if (track.isPlaying) {
+        badge.classList.remove("paused");
+        eq.style.display = "inline-flex";
+        label.textContent = "Lecture";
+      } else {
+        badge.classList.add("paused");
+        eq.style.display = "none";
+        label.textContent = "En pause";
+      }
+
+      const artEl = document.getElementById("sp-art");
+      if (track.cover) {
+        artEl.innerHTML = `<img src="${escapeHtml(track.cover)}" alt="Pochette" onerror="this.remove()" />`;
+      } else {
+        artEl.innerHTML = `
+          <svg class="sp-logo-svg" style="width: 2.2vh; height: 2.2vh;" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm4.586 14.424c-.18.295-.563.387-.857.207-2.35-1.434-5.305-1.76-8.786-.963-.335.077-.67-.133-.746-.468-.077-.335.132-.67.468-.746 3.809-.87 7.076-.496 9.713 1.115.293.18.386.563.208.855zm1.223-2.723c-.226.367-.706.482-1.072.257-2.687-1.652-6.785-2.131-9.965-1.166-.413.125-.848-.108-.973-.52-.125-.413.108-.848.52-.973 3.632-1.102 8.147-.568 11.234 1.328.366.226.48.707.256 1.074zm.105-2.835C14.692 8.95 9.375 8.775 6.297 9.71c-.493.15-1.016-.128-1.166-.62-.149-.493.129-1.016.621-1.166 3.532-1.073 9.404-.865 13.115 1.338.445.264.59.838.327 1.282-.264.444-.838.59-1.28.322z"/>
+          </svg>
+        `;
+      }
+
+      const pct = track.durationMs > 0
+        ? Math.min(100, Math.max(0, (track.progressMs / track.durationMs) * 100))
+        : 0;
+      document.getElementById("sp-progress").style.width = `${pct.toFixed(1)}%`;
+      document.getElementById("sp-time").textContent = `${formatMs(track.progressMs)} / ${formatMs(track.durationMs)}`;
+    }
+
+    function hideSpotifyWidget() {
+      document.getElementById("spotify-widget").classList.remove("is-visible");
+    }
+
+    function updateSpotifyUI() {
+      if (demoMode === 1) {
+        renderSpotifyTrack({
+          isPlaying: true,
+          title: "Midnight City",
+          artist: "M83 • Hurry Up, We're Dreaming",
+          cover: "",
+          progressMs: 118000,
+          durationMs: 243000
+        });
+        return;
+      }
+
+      if (demoMode === 2 || demoMode === 3) {
+        hideSpotifyWidget();
+        return;
+      }
+
+      if (spState.hasTrack) {
+        renderSpotifyTrack(spState);
+      } else {
+        hideSpotifyWidget();
+      }
+    }
+
+    async function pollSpotify() {
+      if (demoMode !== 0) return;
+
+      const token = await getValidSpotifyToken();
+      if (!token) {
+        spState.hasTrack = false;
+        spState.isPlaying = false;
+        updateSpotifyUI();
+        return;
+      }
+
+      try {
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), 3500);
+        const res = await fetch("https://api.spotify.com/v1/me/player/currently-playing", {
+          headers: { "Authorization": `Bearer ${token}` },
+          cache: "no-store",
+          signal: controller.signal
+        });
+        clearTimeout(timer);
+
+        if (res.status === 401) {
+          const refreshed = await refreshSpotifyToken();
+          if (refreshed) return pollSpotify();
+        }
+
+        if (res.status === 204 || res.status === 202 || !res.ok) {
+          spState.hasTrack = false;
+          spState.isPlaying = false;
+          updateSpotifyUI();
+          return;
+        }
+
+        const data = await res.json();
+        if (!data || !data.item) {
+          spState.hasTrack = false;
+          spState.isPlaying = false;
+          updateSpotifyUI();
+          return;
+        }
+
+        const artists = (data.item.artists || []).map(a => a.name).join(", ");
+        const album = data.item.album?.name || "";
+        const imgs = data.item.album?.images || [];
+        const coverUrl = imgs.length ? (imgs[imgs.length - 1].url || imgs[0].url) : "";
+
+        spState = {
+          hasTrack: true,
+          isPlaying: Boolean(data.is_playing),
+          title: data.item.name || "Titre",
+          artist: album ? `${artists} • ${album}` : artists,
+          cover: coverUrl,
+          progressMs: data.progress_ms || 0,
+          durationMs: data.item.duration_ms || 0,
+          lastTick: Date.now()
+        };
+        updateSpotifyUI();
+      } catch (err) {
+        // Ignore silencieusement les erreurs réseau passagères
+      }
+    }
+
+    async function initSpotify() {
+      const params = new URLSearchParams(window.location.search);
+      const code = params.get("code");
+      if (code) {
+        window.history.replaceState({}, document.title, getSpotifyRedirectUri());
+        await exchangeCodeForSpotifyToken(code);
+        closeSpotifyModal();
+      }
+      updateSpotifyModalState();
+      updateSpotifyUI();
+      await pollSpotify();
+      setInterval(pollSpotify, 5000);
+    }
+
+    // Interpolation fluide de la barre de progression Spotify toutes les secondes
+    setInterval(() => {
+      if (demoMode === 0 && spState.hasTrack && spState.isPlaying) {
+        const now = Date.now();
+        const delta = now - spState.lastTick;
+        spState.lastTick = now;
+        spState.progressMs = Math.min(spState.durationMs, spState.progressMs + delta);
+        renderSpotifyTrack(spState);
+      }
+    }, 1000);
+
+    /* ==========================================================================
+       8. MODES DÉMO (D) & CONTRÔLES UTILISATEUR (T, SPOTIFY)
+       ========================================================================== */
+    function applyDemoPreset(mode) {
+      const now = new Date();
+      const y = now.getFullYear(), m = now.getMonth(), d = now.getDate();
+      const tomorrow = new Date(y, m, d + 1);
+
+      if (mode === 1) {
+        // Démo 1/3 : 4 cours (1 en cours, Contrôle de gestion normal), Partiel dans 5 j • Finance, Spotify actif, PEGE complet
+        const demoEvents = [
+          { start: new Date(now.getTime() - 120 * 60000), end: new Date(now.getTime() - 30 * 60000),  title: "CM — Macroéconomie Internationale", location: "Amphi 1 • FSEG PEGE" },
+          { start: new Date(now.getTime() - 15 * 60000),  end: new Date(now.getTime() + 75 * 60000),  title: "CM — Contrôle de gestion", location: "Amphi 3 • FSEG PEGE" },
+          { start: new Date(now.getTime() + 105 * 60000), end: new Date(now.getTime() + 195 * 60000), title: "TD — Économétrie des Variables Qualitatives", location: "Salle 214 • FSEG PEGE" },
+          { start: new Date(now.getTime() + 210 * 60000), end: new Date(now.getTime() + 300 * 60000), title: "TP — Analyse de Données sous R & Python", location: "Salle Info B12 • PEGE" }
+        ];
+        const futureExam = {
+          start: new Date(y, m, d + 5, 9, 0),
+          end: new Date(y, m, d + 5, 11, 0),
+          title: "Partiel — Finance",
+          isExam: true
+        };
+        updateExamCountdown([...demoEvents, futureExam]);
+        renderSchedule({ events: demoEvents, targetDate: now, isTomorrow: false });
+        renderCrousMenu({
+          platDuJour: [
+            "Suprême de volaille sauce forestière",
+            "Spaetzles alsaciens dorés au beurre",
+            "Poêlée de haricots verts persillés"
+          ],
+          menuVege: [
+            "Curry de pois chiches au lait de coco",
+            "Riz basmati parfumé aux épices douces",
+            "Légumes rôtis de saison"
+          ]
+        }, now);
+      } else if (mode === 2) {
+        // Démo 2/3 : Journée chargée à 7 cours (grille 2 colonnes), Spotify inactif, PEGE complet
+        const demoEvents = [
+          { start: new Date(now.getTime() - 150 * 60000), end: new Date(now.getTime() - 60 * 60000),  title: "CM — Contrôle de gestion approfondi", location: "Amphi 4 • FSEG PEGE" },
+          { start: new Date(now.getTime() - 20 * 60000),  end: new Date(now.getTime() + 70 * 60000),  title: "TD — Contrôle interne et audit", location: "Salle 205 • FSEG PEGE" },
+          { start: new Date(now.getTime() + 90 * 60000),  end: new Date(now.getTime() + 180 * 60000), title: "TP — Modélisation Stochastique", location: "Salle Info A04 • PEGE" },
+          { start: new Date(now.getTime() + 195 * 60000), end: new Date(now.getTime() + 285 * 60000), title: "CM — Finance d'Entreprise", location: "Amphi 2 • FSEG PEGE" },
+          { start: new Date(now.getTime() + 300 * 60000), end: new Date(now.getTime() + 390 * 60000), title: "TD — Gestion de Portefeuille & Risques", location: "Salle 108 • FSEG PEGE" },
+          { start: new Date(now.getTime() + 405 * 60000), end: new Date(now.getTime() + 495 * 60000), title: "Séminaire — Stratégie Financière", location: "Salle 302 • FSEG PEGE" },
+          { start: new Date(now.getTime() + 510 * 60000), end: new Date(now.getTime() + 570 * 60000), title: "Anglais des Affaires", location: "Salle 118 • FSEG PEGE" }
+        ];
+        updateExamCountdown(demoEvents);
+        renderSchedule({ events: demoEvents, targetDate: now, isTomorrow: false });
+        renderCrousMenu({
+          platDuJour: [
+            "Filet de colin d'Alaska sauce citronnée",
+            "Écrasé de pommes de terre à l'huile d'olive",
+            "Brocolis vapeur"
+          ],
+          menuVege: [
+            "Lasagnes ricotta, épinards et grana padano",
+            "Salade verte aux graines torréfiées"
+          ]
+        }, now);
+      } else if (mode === 3) {
+        // Démo 3/3 : Soirée après 19h ("Journée de demain"), aucun cours, aucun partiel, CROUS fermé sur 1 ligne, Spotify inactif
+        updateExamCountdown([]);
+        renderSchedule({ events: [], targetDate: tomorrow, isTomorrow: true });
+        renderCrousMenu(null, tomorrow, "Restaurant fermé • Aucun menu publié pour demain");
+      }
+
+      updateSpotifyUI();
+    }
+
+    function cycleDemoMode() {
+      demoMode = (demoMode + 1) % 4;
+      const btn = document.getElementById("btn-toggle-demo");
+
+      if (demoMode === 0) {
+        btn.textContent = "Démo (D)";
+        btn.classList.remove("active");
+        refreshScheduleAndCrous(false);
+        updateSpotifyUI();
+      } else {
+        btn.classList.add("active");
+        btn.textContent = `Démo ${demoMode}/3`;
+        applyDemoPreset(demoMode);
+      }
+    }
+
+    function toggleTodayTomorrow() {
+      if (demoMode !== 0) {
+        demoMode = 0;
+        const demoBtn = document.getElementById("btn-toggle-demo");
+        demoBtn.textContent = "Démo (D)";
+        demoBtn.classList.remove("active");
+      }
+      manualDayToggle = !manualDayToggle;
+      refreshScheduleAndCrous(false);
+      updateSpotifyUI();
+    }
+
+    // Écouteurs d'événements UI et raccourcis clavier
+    document.getElementById("btn-toggle-demo").addEventListener("click", cycleDemoMode);
+    document.getElementById("btn-toggle-day").addEventListener("click", toggleTodayTomorrow);
+    document.getElementById("schedule-day-label").addEventListener("click", toggleTodayTomorrow);
+    document.getElementById("tomorrow-pill").addEventListener("click", toggleTodayTomorrow);
+
+    document.getElementById("btn-spotify-setup").addEventListener("click", openSpotifyModal);
+    document.getElementById("sp-close-modal-btn").addEventListener("click", closeSpotifyModal);
+    document.getElementById("sp-modal").addEventListener("click", e => {
+      if (e.target === e.currentTarget) closeSpotifyModal();
+    });
+
+    document.getElementById("sp-connect-btn").addEventListener("click", startSpotifyAuth);
+    document.getElementById("sp-logout-btn").addEventListener("click", disconnectSpotify);
+    document.getElementById("sp-hover-logout-btn").addEventListener("click", disconnectSpotify);
+
+    document.getElementById("sp-copy-btn").addEventListener("click", () => {
+      const temp = document.createElement("textarea");
+      temp.value = getSpotifyRedirectUri();
+      temp.style.position = "fixed";
+      temp.style.opacity = "0";
+      document.body.appendChild(temp);
+      temp.select();
+      try {
+        document.execCommand("copy");
+      } catch (err) {
+        console.error("Erreur copie presse-papiers:", err);
+      }
+      document.body.removeChild(temp);
+
+      const copyBtn = document.getElementById("sp-copy-btn");
+      copyBtn.textContent = "URI copiée";
+      setTimeout(() => {
+        copyBtn.textContent = "Copier l'URI";
+      }, 2000);
+    });
+
+    window.addEventListener("keydown", e => {
+      if (e.target && (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA")) return;
+      if (e.key === "Escape") closeSpotifyModal();
+      if (e.key === "d" || e.key === "D") cycleDemoMode();
+      if (e.key === "t" || e.key === "T") toggleTodayTomorrow();
+    });
+
+    /* ==========================================================================
+       9. INITIALISATION INSTANTANÉE (CACHE 0 MS PUIS SYNCHRONISATION SILENCIEUSE)
+       ========================================================================== */
+    updateClock();
+    setInterval(updateClock, 1000);
+
+    // Hydratation instantanée depuis localStorage (0 ms)
+    hydrateWeatherFromCache();
+    hydrateScheduleFromCache();
+    refreshScheduleAndCrous(false);
+
+    // Synchronisations réseau en parallèle en arrière-plan
+    fetchWeather();
+    fetchSchedule();
+    initSpotify();
+
+    // Rafraîchissements périodiques silencieux
+    setInterval(fetchWeather, 15 * 60 * 1000);
+    setInterval(fetchSchedule, 5 * 60 * 1000);
+    setInterval(() => {
+      if (demoMode === 0) {
+        const resolved = resolveTargetDay(allCalendarEvents);
+        displayAndRefreshCrousForDate(resolved.targetDate, true);
+      }
+    }, 30 * 60 * 1000);
+  </script>
+</body>
+</html>
