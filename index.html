@@ -1707,10 +1707,10 @@
       weatherCacheKey: "tv_dash_weather_v3",
       weatherCacheTtlMs: 30 * 60 * 1000    // 30 minutes
     };
-     
-    if (CONFIG.spotifyRefreshToken && !localStorage.getItem('tv_dash_spotify_refresh_token')) {
-    localStorage.setItem('tv_dash_spotify_refresh_token', CONFIG.spotifyRefreshToken);
-    }
+
+    if (CONFIG.spotifyRefreshToken && !localStorage.getItem('sp_refresh_token')) {
+  localStorage.setItem('sp_refresh_token', CONFIG.spotifyRefreshToken);
+}
     const CORS_PROXIES = [
       url => `https://corsproxy.io/?${encodeURIComponent(url)}`,
       url => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
